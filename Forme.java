@@ -1,3 +1,5 @@
-abstract class Forme{
-    
+public abstract class Forme{
+    public Forme(){
+        
+    }
 }
