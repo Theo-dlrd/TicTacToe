@@ -1,25 +1,18 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.awt.event.ActionEvent;
-import javax.swing.*;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-import java.net.URL;
-
 public class TicTacToe extends JFrame{
-    private static final int WINDOW_WIDTH = 1000;
-    private static final int WINDOW_HEIGHT = 1000;
+    private static final int WINDOW_WIDTH = 900;
+    private static final int WINDOW_HEIGHT = 800;
 
     public TicTacToe(){
         super("TicTacToe");
@@ -28,6 +21,7 @@ public class TicTacToe extends JFrame{
         Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
         int x = (int) ((dimension.getWidth()-WINDOW_WIDTH)/2);
         int y = (int) ((dimension.getHeight()-WINDOW_HEIGHT)/2);
+        this.setBackground(Color.WHITE);
         this.setLocation(x, y);
         this.setResizable(false);
         this.setLayout(null);
@@ -38,15 +32,20 @@ public class TicTacToe extends JFrame{
         this.setVisible(true);
     }
 
-    public void setAppearence(JButton button){
+    public void setButtonAppearence(JButton button, int x, int y, int width, int height){
         button.setBackground(Color.cyan);
         button.setForeground(Color.black);
         button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setBounds(x,y,width,height);
     }
 
     private void menu(){
+        ImageIcon imageTictactoe = new ImageIcon("image1.png");
+        JLabel imgLabel = new JLabel(imageTictactoe);
+        imgLabel.setBounds(WINDOW_WIDTH/2-325, 0, 650, 600);
+
         JButton quitButton = new JButton("Quitter");
-        quitButton.setBounds(WINDOW_WIDTH/2-100, WINDOW_HEIGHT-200, 200, 30);
+        this.setButtonAppearence(quitButton, WINDOW_WIDTH/2-100, WINDOW_HEIGHT-150, 200, 30);
         quitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e){
@@ -55,8 +54,7 @@ public class TicTacToe extends JFrame{
         });
 
         JButton joinButton = new JButton("Rejoindre une partie");
-        joinButton.setBounds(WINDOW_WIDTH/2-100, WINDOW_HEIGHT-250, 200, 30);
-        this.setAppearence(joinButton);
+        this.setButtonAppearence(joinButton, WINDOW_WIDTH/2-100, WINDOW_HEIGHT-200, 200, 30);
         joinButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e){
@@ -65,7 +63,7 @@ public class TicTacToe extends JFrame{
         });
 
         JButton hostButton = new JButton("Héberger une partie");
-        hostButton.setBounds(WINDOW_WIDTH/2-100, WINDOW_HEIGHT-300, 200, 30);
+        this.setButtonAppearence(hostButton, WINDOW_WIDTH/2-100, WINDOW_HEIGHT-250, 200, 30);
         hostButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e){
@@ -76,6 +74,7 @@ public class TicTacToe extends JFrame{
         this.add(quitButton);
         this.add(hostButton);
         this.add(joinButton);
+        this.add(imgLabel);
     }
 
     
