@@ -1,6 +1,9 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -30,13 +33,10 @@ public class TicTacToe extends JFrame{
         this.setBackground(Color.WHITE);
         this.setLocation(x, y);
         this.setResizable(false);
-        this.setLayout(null);
+        this.setLayout(new GridBagLayout());
         
         //Paramètres du panel
-        JPanel panel = new JPanel();
-        panel.setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-        this.menu(panel);
-        this.add(panel);
+        this.menu();
 
         //Affichage de la fenêtre
         this.pack();
@@ -44,94 +44,68 @@ public class TicTacToe extends JFrame{
     }
 
     public void setButtonAppearence(JButton button){
-        button.setBackground(Color.cyan);
+        button.setBackground(Color.lightGray);
         button.setForeground(Color.black);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setAlignmentX(CENTER_ALIGNMENT);
         button.setPreferredSize(new Dimension(200, 30));
     }
 
-    private void menu(JPanel panel){
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    private void menu(){
+        JPanel panelImg = new JPanel();
+        GridBagConstraints constraintsImg = new GridBagConstraints();
+        constraintsImg.gridx = 0; // Position en colonne 0
+        constraintsImg.gridy = 0; // Position en ligne 0
+        constraintsImg.gridwidth = 1; // Largeur de la cellule : 1
+        constraintsImg.gridheight = 1; // Hauteur de la cellule : 1
+
+        JPanel panelBoutons = new JPanel();
+        panelBoutons.setLayout(new BoxLayout(panelBoutons, BoxLayout.Y_AXIS));
+        GridBagConstraints constraintsBut = new GridBagConstraints();
+        constraintsBut.gridx = 0; // Position en colonne 0
+        constraintsBut.gridy = 1; // Position en ligne 0
+        constraintsBut.gridwidth = 1; // Largeur de la cellule : 1
+        constraintsBut.gridheight = 1; // Hauteur de la cellule : 1
+
         ImageIcon imageTictactoe = new ImageIcon("image1.png");
-        JLabel imgLabel = new JLabel(imageTictactoe);
-        imgLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        imgLabel.setPreferredSize(new Dimension(WINDOW_WIDTH, 600));
-        
+        JLabel jlImg = new JLabel(imageTictactoe);
+        panelImg.add(jlImg);        
 
         JButton joinButton = new JButton("Rejoindre une partie");
+        setButtonAppearence(joinButton);
         JButton quitButton = new JButton("Quitter");
-        JButton hostButton = new JButton("Héberger une partie");
-
         setButtonAppearence(quitButton);
+        JButton hostButton = new JButton("Héberger une partie");
+        setButtonAppearence(hostButton);
+
+
         quitButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e){
+            public void actionPerformed(ActionEvent ae){
                 System.exit(0);
             }
         });
-        
-        setButtonAppearence(joinButton);
-        joinButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e){
-                int playPressed = 0;
-                System.out.println("Demande de rejoindre une partie");
-                panel.remove(joinButton);
-                panel.remove(hostButton);
 
-                JLabel txtCode = new JLabel("Code partie");
-                JTextField codeField = new JTextField(10);
-
-                JButton playButton = new JButton("Jouer");
-                setButtonAppearence(playButton);
-                playButton.setVisible(false);
-                
-
-                codeField.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e){
-                        if(codeField.getText().length()>0 && playButton.isVisible()==false){
-                            playButton.setVisible(true);
-                            panel.repaint();
-                        }
-                        else if(codeField.getText().length()==0 && playButton.isVisible()==true){
-                            playButton.setVisible(false);
-                            panel.repaint();
-                        }
-                    }
-                });
-
-                playButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e){
-                        System.out.println("Lancement du jeu...\n");
-                    }
-                });
-
-                panel.add(txtCode);
-                panel.add(codeField);
-                panel.add(playButton);
-                panel.repaint();
-            }
-        });
-
-        setButtonAppearence(hostButton);
         hostButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e){
-                System.out.println("Demande de créer une partie");
+            public void actionPerformed(ActionEvent ae){
+                
             }
         });
 
-        panel.add(Box.createVerticalStrut(30));
-        panel.add(imgLabel);
-        panel.add(Box.createVerticalStrut(40));
-        panel.add(hostButton);
-        panel.add(Box.createVerticalStrut(20));
-        panel.add(joinButton);
-        panel.add(Box.createVerticalStrut(20));
-        panel.add(quitButton);
+
+
+
+
+        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(hostButton);
+        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(joinButton);
+        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(quitButton);
+
+        this.add(panelImg, constraintsImg);
+        this.add(panelBoutons, constraintsBut);
     }
     
     public static void main(String[] args) {
