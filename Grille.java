@@ -1,7 +1,27 @@
-import java.rmi.*;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-public interface Grille extends Remote{
-    public static void clear() throws RemoteException;
-    public static void placeCroix(int x, int y) throws RemoteException;
-    public static void placeCroix(int x, int y) throws RemoteException;
+public class Grille extends UnicastRemoteObject implements GrilleInterface{
+    private int grille [][];
+
+    Grille() throws RemoteException{
+        super();
+        this.grille = new int[3][3];
+    }
+
+    public void clear(){
+        this.grille = new int[3][3];
+    }
+
+    public void placeCroix(int x, int y){
+        this.grille[x][y] = 1;
+    }
+
+    public void placeRond(int x, int y){
+        this.grille[x][y] = -1;
+    }
+
+    public int[][] getGrille(){
+        return grille;
+    }
 }
