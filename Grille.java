@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     private int grille [][];
-    private HashMap<String,Integer> joueurs;
+    public HashMap<String,Integer> joueurs;
 
 
     Grille() throws RemoteException{
@@ -25,8 +25,9 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
 
     @Override
-    public synchronized boolean rejoindrePartie(String nomJoueur) throws RemoteException {
+    public boolean rejoindrePartie(String nomJoueur) throws RemoteException {
         if (joueurs.size() < 2) {
+            System.out.println(nomJoueur);
             int symbole = (joueurs.size() == 0) ? 1 : -1;
             joueurs.put(nomJoueur, symbole);
             System.out.println(nomJoueur+" nails the competition !");
@@ -34,11 +35,11 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         } 
         else {
             System.out.println(nomJoueur+" can't nail the competition !");
-            return false; //Limite de joueurs atteinte
+            return false;
         }
     }
 
-
+    @Override
     public int placerForme(int x, int y, int forme) throws RemoteException{
         this.grille[x][y] = forme;
         if(win(x, y, forme)){
@@ -50,11 +51,12 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         return 0;
     }
 
-
+    @Override
     public int[][] getGrille(){
         return grille;
     }
 
+    @Override
     public void clear(){
         this.grille = new int[3][3];
     }

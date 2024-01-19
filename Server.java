@@ -9,7 +9,7 @@ public class Server {
             Grille grille = new Grille();
             Registry registry = LocateRegistry.createRegistry(1099);
             System.out.println("Objet Grille lié dans le RMIregistry.");
-            Naming.rebind("rmi:/192.168.1.37:1099/Grille", grille);
+            Naming.rebind("rmi:/192.168.1.39:1099/Grille", grille);
             System.out.println("Attente des invocations des clients...");
         }
         catch(Exception e){
