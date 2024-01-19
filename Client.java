@@ -73,7 +73,7 @@ public class Client {
             int y = index % 3;
 
             try {
-                ri.placeCroix(x, y);
+                //ri.placeCroix(x, y);
                 /*
                 int[][] grille = ri.getGrille();
                 for (int i = 0; i < grille.length; i++) {

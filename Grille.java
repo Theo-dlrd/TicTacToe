@@ -1,9 +1,12 @@
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 
 public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     private int grille [][];
+    private HashMap<String,Integer> joueurs;
+
 
     Grille() throws RemoteException{
         super();
@@ -13,11 +16,26 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
                 this.grille[i][j] = 0;
             }
         }
+        joueurs = new HashMap<>();
     }
 
-    public int placeCroix(int x, int y){
-        this.grille[x][y] = 1;
-        if(win(x, y, 1)){
+
+    @Override
+    public synchronized boolean rejoindrePartie(String nomJoueur) throws RemoteException {
+        if (joueurs.size() < 2) {
+            int symbole = (joueurs.size() == 0) ? 1 : -1;
+            joueurs.put(nomJoueur, symbole);
+            return true;
+        } 
+        else {
+            return false; //Limite de joueurs atteinte
+        }
+    }
+
+
+    public int placerForme(int x, int y, int forme) throws RemoteException{
+        this.grille[x][y] = forme;
+        if(win(x, y, forme)){
             return 1;
         }
         else if(isDraw()){
@@ -26,16 +44,6 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         return 0;
     }
 
-    public int placeRond(int x, int y){
-        this.grille[x][y] = -1;
-        if(win(x, y, -1)){
-            return -1;
-        }
-        else if(isDraw()){
-            return 10;
-        }
-        return 0;
-    }
 
     public int[][] getGrille(){
         return grille;
@@ -48,7 +56,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
     private boolean isDraw(){
         for (int i = 0; i < grille.length; i++) {
             for (int j = 0; j < grille[i].length; j++) {
-                if(grille[i][j]!=0){
+                if(grille[i][j]!= 0){
                     return false;
                 }
             }
