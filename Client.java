@@ -4,10 +4,15 @@ import java.util.ArrayList;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.GridLayout;
 
 
@@ -16,38 +21,86 @@ public class Client {
     private static final int WINDOW_WIDTH = 900;
     private static final int WINDOW_HEIGHT = 800;
 
-    private static void lancerTicTacToe(JFrame frame){
-        frame.setLayout(new GridLayout(3,3));
-        frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
-        ArrayList<JButton> buttons = new ArrayList<JButton>(9);
-        for (int i = 0; i < 9; i++) {
-            JButton button = new JButton();
-            button.addActionListener(new ActionListener(){
-                @Override
-                    public void actionPerformed(ActionEvent a){
-                        int x = buttons.indexOf(button)/3;
-                        int y = buttons.indexOf(button)%3;
-                        frame.remove(button);
-                        try{
-                            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi://localhost:1099/Grille");
-                            System.out.println("Début communication avec le serveur !\n");
-                            ri.placeCroix(x, y);
-                            int[][] nouvGrille = ri.getGrille();
-                            for (int i = 0; i < 3; i++) {
-                                for (int j = 0; j < 3; j++) {
-                                    System.out.print(" "+nouvGrille[i][j]+" ");
-                                }
-                                System.out.print("\n");
-                            }
-                        }
-                        catch(Exception e){
-                            System.out.println("Erreur de laison objet Grille !");
-                            System.out.println(e.toString());
-                        }
+    public Client(JFrame frame){
+        try{
+            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi://192.168.1.39:1099/Grille");
+            System.out.println("Début communication avec le serveur !\n");
+            ri.clear();
+            frame.setLayout(new GridLayout(3,3));
+            frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
+            //ArrayList<JButton> buttons = new ArrayList<JButton>(9);
+            for (int i = 0; i < 9; i++) {
+                JButton button = new JButton();
+                button.addActionListener(new ButtonClickListener(button, ri));
+                frame.add(button);
+            }
+        }
+        catch(Exception e){
+            System.out.println("Erreur : Connexion avec objet Grille non établie !");
+            System.out.println(e.toString());
+            System.exit(-1);
+        }
+    }
+
+    private class ButtonClickListener implements ActionListener {
+        private JButton button;
+        private GrilleInterface ri;
+
+        public ButtonClickListener(JButton button, GrilleInterface ri) {
+            this.button = button;
+            this.ri = ri;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // Remplacer le bouton par une image
+            Container container = button.getParent();
+            int index = container.getComponentZOrder(button);
+            container.remove(button);
+
+            // Charger l'image
+            ImageIcon imageIcon = new ImageIcon("croix.png");
+            JLabel imageLabel = new JLabel(imageIcon);
+
+            // Ajouter l'image à la même position que le bouton précédent
+            container.add(imageLabel, index);
+
+            // Rafraîchir l'interface graphique
+            container.revalidate();
+            container.repaint();
+
+            int x = index / 3;
+            int y = index % 3;
+
+            try {
+                ri.placeCroix(x, y);
+                /*
+                int[][] grille = ri.getGrille();
+                for (int i = 0; i < grille.length; i++) {
+                    for (int j = 0; j < grille[i].length; j++) {
+                        System.out.print(" "+grille[i][j]+" ");
                     }
-            });
-            buttons.add(button);
-            frame.add(button);
+                    System.out.print("\n");
+                } 
+                */
+            } 
+            catch (Exception ex) {
+                System.out.println("Erreur : Connexion avec le serveur de la grille interrompu !");
+                System.out.println(ex.toString());
+                try {
+                    int[][] grille = ri.getGrille();
+                    for (int i = 0; i < grille.length; i++) {
+                        for (int j = 0; j < grille[i].length; j++) {
+                            System.out.print(" "+grille[i][j]+" ");
+                        }
+                        System.out.print("\n");
+                    } 
+                } catch (Exception exx) {
+                    System.out.println("Erreur : Connexion avec le serveur de la grille interrompu !");
+                    System.out.println(ex.toString());
+                }
+            }
+            
         }
     }
 
@@ -64,8 +117,10 @@ public class Client {
         frame.setResizable(false);
         frame.setVisible(true);
 
-        lancerTicTacToe(frame);
+        Client cl1 = new Client(frame);
 
         frame.pack();
     }
 }
+
+
