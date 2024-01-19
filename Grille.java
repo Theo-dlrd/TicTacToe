@@ -19,6 +19,10 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         joueurs = new HashMap<>();
     }
 
+    public int getForme(String nom) throws Exception{
+        return joueurs.get(nom);
+    }
+
 
     @Override
     public synchronized boolean rejoindrePartie(String nomJoueur) throws RemoteException {
@@ -29,6 +33,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
             return true;
         } 
         else {
+            System.out.println(nomJoueur+" can't nail the competition !");
             return false; //Limite de joueurs atteinte
         }
     }

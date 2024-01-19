@@ -21,15 +21,25 @@ public class Client {
     private static final int WINDOW_WIDTH = 900;
     private static final int WINDOW_HEIGHT = 800;
 
-    public Client(JFrame frame){
+    private String nom;
+    public int forme;
+
+    public Client(JFrame frame, String nom){
+        this.nom = nom;
         try{
             GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi://192.168.1.37:1099/Grille");
-            ri.rejoindrePartie("Théo");
-            System.out.println("Début communication avec le serveur !\n");
+            if(ri.rejoindrePartie(nom)){
+                this.forme = ri.getForme(nom);
+                System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
+            }
+            else{
+                System.exit(-1);
+            }
             ri.clear();
+
+
             frame.setLayout(new GridLayout(3,3));
             frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
-            //ArrayList<JButton> buttons = new ArrayList<JButton>(9);
             for (int i = 0; i < 9; i++) {
                 JButton button = new JButton();
                 button.addActionListener(new ButtonClickListener(button, ri));
@@ -74,7 +84,7 @@ public class Client {
             int y = index % 3;
 
             try {
-                //ri.placeCroix(x, y);
+                ri.placerForme(x, y, forme);
                 /*
                 int[][] grille = ri.getGrille();
                 for (int i = 0; i < grille.length; i++) {
@@ -118,7 +128,8 @@ public class Client {
         frame.setResizable(false);
         frame.setVisible(true);
 
-        Client cl1 = new Client(frame);
+        Client cl1 = new Client(frame, "Théo");
+
 
         frame.pack();
     }
