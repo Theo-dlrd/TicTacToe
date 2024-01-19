@@ -25,6 +25,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         if (joueurs.size() < 2) {
             int symbole = (joueurs.size() == 0) ? 1 : -1;
             joueurs.put(nomJoueur, symbole);
+            System.out.println(nomJoueur+" nails the competition !");
             return true;
         } 
         else {

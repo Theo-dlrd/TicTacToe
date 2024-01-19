@@ -24,6 +24,7 @@ public class Client {
     public Client(JFrame frame){
         try{
             GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi://192.168.1.37:1099/Grille");
+            ri.rejoindrePartie("Théo");
             System.out.println("Début communication avec le serveur !\n");
             ri.clear();
             frame.setLayout(new GridLayout(3,3));
