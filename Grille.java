@@ -18,6 +18,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
             }
         }
         joueurs = new HashMap<>();
+        tour=null;
     }
 
     public int getForme(String nom) throws Exception{
@@ -36,18 +37,19 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     @Override
     public void passerTour() throws RemoteException {
-        if(tour == null){
-            tour = joueurs.keySet().iterator().next();  // Si c'est le premier tour, définir le premier joueur
+        if(this.tour == null){
+            this.tour = joueurs.keySet().iterator().next();  // Si c'est le premier tour, définir le premier joueur
         } 
         else{
             // Changer de joueur
             for(String joueur : joueurs.keySet()) {
-                if(!joueur.equals(tour)){
-                    tour = joueur;
+                if(!joueur.equals(this.tour)){
+                    this.tour = joueur;
                     break;
                 }
             }
         }
+        System.out.println("Tour de " + this.tour);
     }
 
 

@@ -52,57 +52,98 @@ public class Client {
                 JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
             }
 
-            boolean play=true;
-            while(play)
-                if(ri.getTour().equals(this.nom)){
-                    JOptionPane.showMessageDialog(frame, "C'est à vous de jouer !");
-                    for (int i = 0; i < 9; i++) {
-                        JButton button = new JButton();
-                        button.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                // Remplacer le bouton par une image
-                                Container container = button.getParent();
-                                int index = container.getComponentZOrder(button);
-                                container.remove(button);
+           
 
-                                // Charger l'image
-                                ImageIcon imageIcon;
-                                if(forme == 1){
-                                    imageIcon= new ImageIcon("croix.png");
+            for (int i = 0; i < 9; i++) {
+                JButton button = new JButton();
+                button.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // Remplacer le bouton par une image
+                        Container container = button.getParent();
+                        int index = container.getComponentZOrder(button);
+                        container.remove(button);
+
+                        // Charger l'image
+                        ImageIcon imageIcon;
+                        if(forme == 1){
+                            imageIcon= new ImageIcon("croix.png");
+                        }
+                        else{
+                            imageIcon= new ImageIcon("rond.png");
+                        }
+                        JLabel imageLabel = new JLabel(imageIcon);
+
+                        // Ajouter l'image à la même position que le bouton précédent
+                        container.add(imageLabel, index);
+
+                        // Rafraîchir l'interface graphique
+                        container.revalidate();
+                        container.repaint();
+
+                        int x = index / 3;
+                        int y = index - x*3;
+
+                        try {
+                            ri.placerForme(x, y, forme);
+                            ri.passerTour();
+                        } 
+                        catch (Exception ex) {
+                            System.out.println(ex.toString());
+                        }
+                    }
+                });
+                frame.add(button);
+            }
+           
+            frame.setVisible(true);
+
+            // Utilisez un thread dédié pour gérer le tour par tour
+            Thread tourThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean play = true;
+                    boolean monTour = false;
+                    
+                    try{
+                        ri.passerTour();
+                        while (play) {
+                            ecouteGrille = ri.getGrille();
+                            // Vérifier le tour du joueur
+                            if (ri.getTour().equals(nom)) {
+                                if (!monTour) {
+                                    monTour = true;
+                                    JOptionPane.showMessageDialog(frame,"C'est votre tour. Jouez maintenant!");
                                 }
-                                else{
-                                    imageIcon= new ImageIcon("rond.png");
-                                }
-                                JLabel imageLabel = new JLabel(imageIcon);
 
-                                // Ajouter l'image à la même position que le bouton précédent
-                                container.add(imageLabel, index);
-
-                                // Rafraîchir l'interface graphique
-                                container.revalidate();
-                                container.repaint();
-
-                                int x = index / 3;
-                                int y = index - x*3;
-
-                                try {
-                                    ri.placerForme(x, y, forme);
-                                    int[][] grille = ri.getGrille();
+                                
+                                // Passer le tour au joueur suivant
+                                if(ecouteGrille!=null && !sameGrille(ecouteGrille, ri.getGrille())){
                                     ri.passerTour();
-                                } 
-                                catch (Exception ex) {
-                                    System.out.println(ex.toString());
                                 }
+                                    
+                            } 
+                            else {
+                                monTour = false;
+                                JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
+                                // Ce n'est pas le tour du joueur actuel
+                                // Rafraîchissez l'interface graphique uniquement si nécessaire
+                                if (ecouteGrille != null && !sameGrille(ecouteGrille, ri.getGrille())) {
+                                    frame.repaint();
+                                }
+                                // Attendre un court moment entre les vérifications
+                                // Thread.sleep(1000);
                             }
-                        });
-                        frame.add(button);
-                        frame.repaint();
+                        }
+                    } 
+                    catch (Exception ex) {
+                        System.out.println(ex.toString());
                     }
                 }
-                else{
-                    JOptionPane.showMessageDialog(frame, "En attente du tour de l'autre joueur. Veuillez patienter...");
-                }
+            });
+
+            tourThread.start(); // Démarrer le thread
+
         }
         catch(Exception e){
             System.out.println(e.toString());
@@ -165,7 +206,7 @@ public class Client {
         new Client(frame, args[0]);
 
         frame.setVisible(true);
-        //frame.pack();
+        frame.pack();
     }
 }
 
