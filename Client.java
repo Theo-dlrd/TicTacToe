@@ -1,15 +1,17 @@
 import java.awt.Dimension;
 import java.rmi.*;
-import java.util.ArrayList;
+import java.util.Enumeration;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.awt.event.ActionEvent;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 import java.awt.Color;
 import java.awt.Container;
@@ -23,96 +25,129 @@ public class Client {
 
     private String nom;
     public int forme;
+    private int[][] ecouteGrille;
 
     public Client(JFrame frame, String nom){
-        this.nom = nom;
         try{
-            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi://192.168.1.37:1099/Grille");
-            if(ri.rejoindrePartie(nom)){
-                this.forme = ri.getForme(nom);
-                System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
-            }
-            else{
-                System.exit(-1);
-            }
-            ri.clear();
+            this.nom = nom;
 
-
+            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi:/"+this.getIPAdress()+":1099/Grille");
             frame.setLayout(new GridLayout(3,3));
             frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
-            for (int i = 0; i < 9; i++) {
-                JButton button = new JButton();
-                button.addActionListener(new ButtonClickListener(button, ri));
-                frame.add(button);
+            int retourJoin = ri.rejoindrePartie(this.nom);
+            if(retourJoin==0){
+                this.forme = ri.getForme(this.nom);
+                System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
             }
+            else if(retourJoin==-1){
+                JOptionPane.showMessageDialog(frame, "Un autre utilisateur utilise ce pseudo !");
+                System.exit(retourJoin);
+            }
+            else{
+                JOptionPane.showMessageDialog(frame, "Le nombre maximal de personnes pour cette partie est atteint !");
+                System.exit(retourJoin);
+            }
+
+            while (ri.getNbJoueurs()<2) {
+                JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
+            }
+
+            boolean play=true;
+            while(play)
+                if(ri.getTour().equals(this.nom)){
+                    JOptionPane.showMessageDialog(frame, "C'est à vous de jouer !");
+                    for (int i = 0; i < 9; i++) {
+                        JButton button = new JButton();
+                        button.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                // Remplacer le bouton par une image
+                                Container container = button.getParent();
+                                int index = container.getComponentZOrder(button);
+                                container.remove(button);
+
+                                // Charger l'image
+                                ImageIcon imageIcon;
+                                if(forme == 1){
+                                    imageIcon= new ImageIcon("croix.png");
+                                }
+                                else{
+                                    imageIcon= new ImageIcon("rond.png");
+                                }
+                                JLabel imageLabel = new JLabel(imageIcon);
+
+                                // Ajouter l'image à la même position que le bouton précédent
+                                container.add(imageLabel, index);
+
+                                // Rafraîchir l'interface graphique
+                                container.revalidate();
+                                container.repaint();
+
+                                int x = index / 3;
+                                int y = index - x*3;
+
+                                try {
+                                    ri.placerForme(x, y, forme);
+                                    int[][] grille = ri.getGrille();
+                                    ri.passerTour();
+                                } 
+                                catch (Exception ex) {
+                                    System.out.println(ex.toString());
+                                }
+                            }
+                        });
+                        frame.add(button);
+                        frame.repaint();
+                    }
+                }
+                else{
+                    JOptionPane.showMessageDialog(frame, "En attente du tour de l'autre joueur. Veuillez patienter...");
+                }
         }
         catch(Exception e){
-            System.out.println("Erreur : Connexion avec objet Grille non établie !");
             System.out.println(e.toString());
-            System.exit(-1);
-        }
+        }        
     }
 
-    private class ButtonClickListener implements ActionListener {
-        private JButton button;
-        private GrilleInterface ri;
 
-        public ButtonClickListener(JButton button, GrilleInterface ri) {
-            this.button = button;
-            this.ri = ri;
-        }
+    private String getIPAdress(){
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // Remplacer le bouton par une image
-            Container container = button.getParent();
-            int index = container.getComponentZOrder(button);
-            container.remove(button);
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+                
+                // Filtrer les interfaces qui ne sont pas actives
+                if (!networkInterface.isUp() || networkInterface.isLoopback() || networkInterface.isVirtual()) {
+                    continue;
+                }
 
-            // Charger l'image
-            ImageIcon imageIcon = new ImageIcon("croix.png");
-            JLabel imageLabel = new JLabel(imageIcon);
+                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
 
-            // Ajouter l'image à la même position que le bouton précédent
-            container.add(imageLabel, index);
-
-            // Rafraîchir l'interface graphique
-            container.revalidate();
-            container.repaint();
-
-            int x = index / 3;
-            int y = index % 3;
-
-            try {
-                ri.placerForme(x, y, forme);
-                /*
-                int[][] grille = ri.getGrille();
-                for (int i = 0; i < grille.length; i++) {
-                    for (int j = 0; j < grille[i].length; j++) {
-                        System.out.print(" "+grille[i][j]+" ");
+                while (inetAddresses.hasMoreElements()) {
+                    InetAddress inetAddress = inetAddresses.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress.isSiteLocalAddress()) {
+                        System.out.println("Adresse IP sur le réseau : " + inetAddress.getHostAddress());
+                        return inetAddress.getHostAddress();
                     }
-                    System.out.print("\n");
-                } 
-                */
-            } 
-            catch (Exception ex) {
-                System.out.println("Erreur : Connexion avec le serveur de la grille interrompu !");
-                System.out.println(ex.toString());
-                try {
-                    int[][] grille = ri.getGrille();
-                    for (int i = 0; i < grille.length; i++) {
-                        for (int j = 0; j < grille[i].length; j++) {
-                            System.out.print(" "+grille[i][j]+" ");
-                        }
-                        System.out.print("\n");
-                    } 
-                } catch (Exception exx) {
-                    System.out.println("Erreur : Connexion avec le serveur de la grille interrompu !");
-                    System.out.println(ex.toString());
                 }
             }
-            
+        } catch (SocketException e) {
+            e.printStackTrace();
         }
+        return null;
+    }
+
+
+    private boolean sameGrille(int[][] grille1, int[][] grille2){
+        for (int i = 0; i < grille1.length; i++) {
+            for (int j = 0; j < grille1[i].length; j++) {
+                if(grille1[i][j]!=grille2[i][j]){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 
@@ -126,12 +161,11 @@ public class Client {
         frame.setBackground(Color.WHITE);
         frame.setLocation(x, y);
         frame.setResizable(false);
+
+        new Client(frame, args[0]);
+
         frame.setVisible(true);
-
-        Client cl1 = new Client(frame, "Théo");
-
-
-        frame.pack();
+        //frame.pack();
     }
 }
 

@@ -5,7 +5,8 @@ import java.util.HashMap;
 public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     private int grille [][];
-    private HashMap<String,Integer> joueurs;
+    public HashMap<String,Integer> joueurs;
+    private String tour;
 
 
     Grille() throws RemoteException{
@@ -23,22 +24,52 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         return joueurs.get(nom);
     }
 
+    public int getNbJoueurs(){
+        return joueurs.size();
+    }
 
     @Override
-    public synchronized boolean rejoindrePartie(String nomJoueur) throws RemoteException {
-        if (joueurs.size() < 2) {
-            int symbole = (joueurs.size() == 0) ? 1 : -1;
-            joueurs.put(nomJoueur, symbole);
-            System.out.println(nomJoueur+" nails the competition !");
-            return true;
+    public String getTour() throws RemoteException {
+        return tour;
+    }
+
+
+    @Override
+    public void passerTour() throws RemoteException {
+        if(tour == null){
+            tour = joueurs.keySet().iterator().next();  // Si c'est le premier tour, définir le premier joueur
         } 
-        else {
-            System.out.println(nomJoueur+" can't nail the competition !");
-            return false; //Limite de joueurs atteinte
+        else{
+            // Changer de joueur
+            for(String joueur : joueurs.keySet()) {
+                if(!joueur.equals(tour)){
+                    tour = joueur;
+                    break;
+                }
+            }
         }
     }
 
 
+
+    @Override
+    public int rejoindrePartie(String nomJoueur) throws RemoteException {
+        if (joueurs.size() < 2 && joueurs.get(nomJoueur)==null) {
+            int symbole = (joueurs.size() == 0) ? 1 : -1;
+            joueurs.put(nomJoueur, symbole);
+            System.out.println(nomJoueur+" nails the competition !");
+            return 0;
+        } 
+        else if(joueurs.get(nomJoueur)!=null){
+            return -1;
+        }
+        else {
+            System.out.println(nomJoueur+" go fuck yourself !");
+            return 1;
+        }
+    }
+
+    @Override
     public int placerForme(int x, int y, int forme) throws RemoteException{
         this.grille[x][y] = forme;
         if(win(x, y, forme)){
@@ -50,11 +81,12 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         return 0;
     }
 
-
+    @Override
     public int[][] getGrille(){
         return grille;
     }
 
+    @Override
     public void clear(){
         this.grille = new int[3][3];
     }
