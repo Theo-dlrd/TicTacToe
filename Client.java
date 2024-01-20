@@ -1,12 +1,17 @@
 import java.awt.Dimension;
 import java.rmi.*;
+import java.util.Enumeration;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.awt.event.ActionEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 import java.awt.Color;
 import java.awt.Container;
@@ -20,20 +25,30 @@ public class Client {
 
     private String nom;
     public int forme;
+    private int[][] ecouteGrille;
 
     public Client(JFrame frame, String nom){
         try{
-            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi:/192.168.1.39:1099/Grille");
-            
+            this.nom = nom;
+
+            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi:/"+this.getIPAdress()+":1099/Grille");
+            frame.setLayout(new GridLayout(3,3));
+            frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
+
             if(ri.rejoindrePartie(this.nom)){
                 this.forme = ri.getForme(this.nom);
                 System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
             }
+            else{
+                JOptionPane.showMessageDialog(frame, "Le nombre maximal de personnes pour cette partie est atteint !");
+                System.exit(-1);
+            }
 
+            while (ri.getNbJoueurs()<2) {
+                JOptionPane.showMessageDialog(frame, "En attente d'un autre joueur. Veuillez patienter...");
+            }
 
-            this.nom = nom;
-            frame.setLayout(new GridLayout(3,3));
-            frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
+            
             for (int i = 0; i < 9; i++) {
                 JButton button = new JButton();
                 button.addActionListener(new ActionListener() {
@@ -67,12 +82,8 @@ public class Client {
                         try {
                             ri.placerForme(x, y, forme);
                             int[][] grille = ri.getGrille();
-                            for (int i = 0; i < grille.length; i++) {
-                                for (int j = 0; j < grille[i].length; j++) {
-                                    System.out.print(" "+grille[i][j]+" ");
-                                }
-                                System.out.print("\n");
-                            } 
+                            ecouteGrille = ri.getGrille();
+
                         } 
                         catch (Exception ex) {
                             System.out.println("Erreur : Connexion avec le serveur de la grille interrompu !");
@@ -90,9 +101,11 @@ public class Client {
                                 System.out.println(ex.toString());
                             }
                         }
+                        
                     }
                 });
                 frame.add(button);
+                frame.repaint();
             }
         }
         catch(Exception e){
@@ -100,6 +113,34 @@ public class Client {
         }        
     }
 
+
+    private String getIPAdress(){
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+                
+                // Filtrer les interfaces qui ne sont pas actives
+                if (!networkInterface.isUp() || networkInterface.isLoopback() || networkInterface.isVirtual()) {
+                    continue;
+                }
+
+                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+
+                while (inetAddresses.hasMoreElements()) {
+                    InetAddress inetAddress = inetAddresses.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress.isSiteLocalAddress()) {
+                        System.out.println("Adresse IP sur le réseau : " + inetAddress.getHostAddress());
+                        return inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 
     public static void main(String[] args) {
@@ -116,7 +157,7 @@ public class Client {
         new Client(frame, "Théo");
 
         frame.setVisible(true);
-        frame.pack();
+        //frame.pack();
     }
 }
 

@@ -23,11 +23,15 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         return joueurs.get(nom);
     }
 
+    public int getNbJoueurs(){
+        return joueurs.size();
+    }
+
 
     @Override
     public boolean rejoindrePartie(String nomJoueur) throws RemoteException {
         if (joueurs.size() < 2) {
-            System.out.println(nomJoueur);
+            System.out.println(joueurs.size());
             int symbole = (joueurs.size() == 0) ? 1 : -1;
             joueurs.put(nomJoueur, symbole);
             System.out.println(nomJoueur+" nails the competition !");
