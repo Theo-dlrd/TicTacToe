@@ -39,7 +39,7 @@ public class Server {
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
                     if (!inetAddress.isLoopbackAddress() && inetAddress.isSiteLocalAddress()) {
-                        System.out.println("Adresse IP sur le réseau : " + inetAddress.getHostAddress());
+                        System.out.println("Adresse IP Server : " + inetAddress.getHostAddress());
                         return inetAddress.getHostAddress();
                     }
                 }

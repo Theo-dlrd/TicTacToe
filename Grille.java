@@ -5,8 +5,8 @@ import java.util.HashMap;
 public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     private int grille [][];
-    public HashMap<String,Integer> joueurs;
-    private String tour;
+    private HashMap<Integer,Integer> joueurs;
+    private int tour;
 
 
     Grille() throws RemoteException{
@@ -18,11 +18,12 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
             }
         }
         joueurs = new HashMap<>();
-        tour=null;
+        tour=0;
     }
 
-    public int getForme(String nom) throws Exception{
-        return joueurs.get(nom);
+    public int getForme(int id) throws Exception{
+        System.out.println("Recherche de : "+id);
+        return joueurs.get(id);
     }
 
     public int getNbJoueurs(){
@@ -30,43 +31,44 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
     }
 
     @Override
-    public String getTour() throws RemoteException {
+    public int getTour() throws RemoteException {
         return tour;
     }
 
 
     @Override
     public void passerTour() throws RemoteException {
-        if(this.tour == null){
+        if(this.tour == 0){
             this.tour = joueurs.keySet().iterator().next();  // Si c'est le premier tour, définir le premier joueur
         } 
         else{
             // Changer de joueur
-            for(String joueur : joueurs.keySet()) {
-                if(!joueur.equals(this.tour)){
-                    this.tour = joueur;
+            for(int id : joueurs.keySet()) {
+                if(id != this.tour){
+                    this.tour = id;
                     break;
                 }
             }
         }
-        System.out.println("Tour de " + this.tour);
+        System.out.println("Tour du joueur id : " + this.tour);
     }
 
 
 
     @Override
-    public int rejoindrePartie(String nomJoueur) throws RemoteException {
-        if (joueurs.size() < 2 && joueurs.get(nomJoueur)==null) {
+    public int rejoindrePartie(int idJoueur) throws RemoteException {
+        if (joueurs.size() < 2 && joueurs.get(idJoueur)==null) {
             int symbole = (joueurs.size() == 0) ? 1 : -1;
-            joueurs.put(nomJoueur, symbole);
-            System.out.println(nomJoueur+" nails the competition !");
+            joueurs.put(idJoueur, symbole);
+            System.out.println(idJoueur+" nails the competition !");
+            System.out.println(idJoueur+" : "+joueurs.get(idJoueur));
             return 0;
         } 
-        else if(joueurs.get(nomJoueur)!=null){
+        else if(joueurs.get(idJoueur)!=null){
             return -1;
         }
         else {
-            System.out.println(nomJoueur+" go fuck yourself !");
+            System.out.println(idJoueur+" go fuck yourself !");
             return 1;
         }
     }

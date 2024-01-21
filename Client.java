@@ -1,8 +1,10 @@
 import java.awt.Dimension;
 import java.rmi.*;
 import java.util.Enumeration;
+import java.util.Random;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -18,25 +20,28 @@ import java.awt.Container;
 import java.awt.GridLayout;
 
 
-public class Client {
-
+public class Client implements Serializable {
     private static final int WINDOW_WIDTH = 900;
     private static final int WINDOW_HEIGHT = 800;
 
-    private String nom;
     public int forme;
+    public int id_joueur;
     private int[][] ecouteGrille;
 
-    public Client(JFrame frame, String nom){
+    public Client(JFrame frame){
         try{
-            this.nom = nom;
-
             GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi:/"+this.getIPAdress()+":1099/Grille");
             frame.setLayout(new GridLayout(3,3));
             frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
-            int retourJoin = ri.rejoindrePartie(this.nom);
+
+            Random random = new Random();
+            int retourJoin;
+            do{
+                this.id_joueur = random.nextInt(100)+1;
+            }while((retourJoin = ri.rejoindrePartie(this.id_joueur))==-1);
+
             if(retourJoin==0){
-                this.forme = ri.getForme(this.nom);
+                this.forme = ri.getForme(this.id_joueur);
                 System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
             }
             else if(retourJoin==-1){
@@ -52,6 +57,7 @@ public class Client {
                 JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
             }
 
+            System.out.println("avant ajoutbutton");
            
 
             for (int i = 0; i < 9; i++) {
@@ -97,53 +103,47 @@ public class Client {
             }
            
             frame.setVisible(true);
-
-            // Utilisez un thread dédié pour gérer le tour par tour
-            Thread tourThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    boolean play = true;
-                    boolean monTour = false;
-                    
-                    try{
-                        ri.passerTour();
-                        while (play) {
-                            ecouteGrille = ri.getGrille();
-                            // Vérifier le tour du joueur
-                            if (ri.getTour().equals(nom)) {
-                                if (!monTour) {
-                                    monTour = true;
-                                    JOptionPane.showMessageDialog(frame,"C'est votre tour. Jouez maintenant!");
-                                }
-
-                                
-                                // Passer le tour au joueur suivant
-                                if(ecouteGrille!=null && !sameGrille(ecouteGrille, ri.getGrille())){
-                                    ri.passerTour();
-                                }
-                                    
-                            } 
-                            else {
-                                monTour = false;
-                                JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
-                                // Ce n'est pas le tour du joueur actuel
-                                // Rafraîchissez l'interface graphique uniquement si nécessaire
-                                if (ecouteGrille != null && !sameGrille(ecouteGrille, ri.getGrille())) {
-                                    frame.repaint();
-                                }
-                                // Attendre un court moment entre les vérifications
-                                // Thread.sleep(1000);
-                            }
+           
+    
+            boolean play = true;
+            boolean monTour = false;
+            boolean alreadySeenNotMyTurn = false;
+            boolean alreadySeenMyTurn = false;
+            try{
+                ri.passerTour();
+                while(play){
+                    ecouteGrille = ri.getGrille();
+                    // Vérifier le tour du joueur
+                    if (ri.getTour() == this.id_joueur) {
+                        // Passer le tour au joueur suivant
+                        if(alreadySeenMyTurn==false){
+                            JOptionPane.showMessageDialog(frame,"A vous de jouer...");
+                            alreadySeenMyTurn=true;
+                            alreadySeenNotMyTurn=false;
                         }
+                        
+
+                        if(ecouteGrille != null && !sameGrille(ecouteGrille, ri.getGrille())){
+                            ri.passerTour();
+                        }
+                            
                     } 
-                    catch (Exception ex) {
-                        System.out.println(ex.toString());
+                    else {
+                        if(alreadySeenNotMyTurn==false){
+                            JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
+                            alreadySeenNotMyTurn=true;
+                            alreadySeenMyTurn=false;
+                        }
+                       
+                        if (ecouteGrille != null && !sameGrille(ecouteGrille, ri.getGrille())) {
+                            frame.repaint();
+                        }
                     }
                 }
-            });
-
-            tourThread.start(); // Démarrer le thread
-
+            } 
+            catch (Exception ex) {
+                System.out.println(ex.toString());
+            }
         }
         catch(Exception e){
             System.out.println(e.toString());
@@ -168,7 +168,7 @@ public class Client {
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
                     if (!inetAddress.isLoopbackAddress() && inetAddress.isSiteLocalAddress()) {
-                        System.out.println("Adresse IP sur le réseau : " + inetAddress.getHostAddress());
+                        System.out.println("Adresse IP Client : " + inetAddress.getHostAddress());
                         return inetAddress.getHostAddress();
                     }
                 }
@@ -203,7 +203,7 @@ public class Client {
         frame.setLocation(x, y);
         frame.setResizable(false);
 
-        new Client(frame, args[0]);
+        new Client(frame);
 
         frame.setVisible(true);
         frame.pack();
