@@ -2,6 +2,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface GrilleInterface extends Remote{
+
+    public static enum Status {READY,WAITING,CREATED};
+
+    public boolean allStatusReady() throws RemoteException; 
+    public void sendStatus(int id, Status st) throws RemoteException;
     public int getTour() throws RemoteException;
     public void passerTour() throws RemoteException;
     public int getNbJoueurs() throws RemoteException;

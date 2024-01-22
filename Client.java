@@ -18,19 +18,28 @@ import javax.swing.WindowConstants;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridLayout;
+import java.awt.Component;
 
 
-public class Client implements Serializable {
+public class Client {
     private static final int WINDOW_WIDTH = 900;
     private static final int WINDOW_HEIGHT = 800;
 
     public int forme;
     public int id_joueur;
     private int[][] ecouteGrille;
+    private boolean monTour;
+    
 
-    public Client(JFrame frame){
+    public Client(JFrame frame, String ip){
         try{
-            GrilleInterface ri = (GrilleInterface) Naming.lookup("rmi:/"+this.getIPAdress()+":1099/Grille");
+            GrilleInterface ri;
+            if(ip==null){
+                ri = (GrilleInterface) Naming.lookup("rmi:/"+this.getIPAdress()+":1099/Grille");
+            }
+            else{
+                ri = (GrilleInterface) Naming.lookup("rmi:/"+ip+":1099/Grille");
+            }
             frame.setLayout(new GridLayout(3,3));
             frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
 
@@ -43,6 +52,12 @@ public class Client implements Serializable {
             if(retourJoin==0){
                 this.forme = ri.getForme(this.id_joueur);
                 System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
+                if(this.forme==1){
+                    this.monTour=true;
+                }
+                else{
+                    this.monTour=false;
+                }
             }
             else if(retourJoin==-1){
                 JOptionPane.showMessageDialog(frame, "Un autre utilisateur utilise ce pseudo !");
@@ -54,90 +69,153 @@ public class Client implements Serializable {
             }
 
             while (ri.getNbJoueurs()<2) {
+                ri.sendStatus(this.id_joueur, GrilleInterface.Status.WAITING);
                 JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
             }
 
-            System.out.println("avant ajoutbutton");
-           
+            ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
 
+            frame.setVisible(true);
+            frame.repaint();
+
+            while(!ri.allStatusReady());
+           
+            /*
             for (int i = 0; i < 9; i++) {
                 JButton button = new JButton();
                 button.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        // Remplacer le bouton par une image
-                        Container container = button.getParent();
-                        int index = container.getComponentZOrder(button);
-                        container.remove(button);
+                            // Remplacer le bouton par une image
+                            Container container = button.getParent();
+                            int index = container.getComponentZOrder(button);
+                            System.out.println(index);
+                            container.remove(button);
 
-                        // Charger l'image
-                        ImageIcon imageIcon;
-                        if(forme == 1){
-                            imageIcon= new ImageIcon("croix.png");
-                        }
-                        else{
-                            imageIcon= new ImageIcon("rond.png");
-                        }
-                        JLabel imageLabel = new JLabel(imageIcon);
+                            // Charger l'image
+                            ImageIcon imageIcon;
+                            if(forme == 1){
+                                imageIcon= new ImageIcon("croix.png");
+                            }
+                            else{
+                                imageIcon= new ImageIcon("rond.png");
+                            }
+                            JLabel imageLabel = new JLabel(imageIcon);
 
-                        // Ajouter l'image à la même position que le bouton précédent
-                        container.add(imageLabel, index);
+                            // Ajouter l'image à la même position que le bouton précédent
+                            container.add(imageLabel, index);
 
-                        // Rafraîchir l'interface graphique
-                        container.revalidate();
-                        container.repaint();
+                            // Rafraîchir l'interface graphique
+                            container.revalidate();
+                            container.repaint();
 
-                        int x = index / 3;
-                        int y = index - x*3;
+                            int x = index / 3;
+                            int y = index - x*3;
 
-                        try {
-                            ri.placerForme(x, y, forme);
-                            ri.passerTour();
-                        } 
-                        catch (Exception ex) {
-                            System.out.println(ex.toString());
-                        }
+                            try {
+                                ri.placerForme(x, y, forme);
+                                ri.passerTour();
+                            } 
+                            catch (Exception ex) {
+                                System.out.println(ex.toString());
+                            }
+                        
                     }
                 });
                 frame.add(button);
             }
-           
-            frame.setVisible(true);
-           
-    
+           */
+
+
             boolean play = true;
-            boolean monTour = false;
-            boolean alreadySeenNotMyTurn = false;
-            boolean alreadySeenMyTurn = false;
+            this.monTour = false;
             try{
                 ri.passerTour();
                 while(play){
                     ecouteGrille = ri.getGrille();
                     // Vérifier le tour du joueur
                     if (ri.getTour() == this.id_joueur) {
-                        // Passer le tour au joueur suivant
-                        if(alreadySeenMyTurn==false){
-                            JOptionPane.showMessageDialog(frame,"A vous de jouer...");
-                            alreadySeenMyTurn=true;
-                            alreadySeenNotMyTurn=false;
+
+                        frame.removeAll();
+                        for (int i = 0; i < ecouteGrille.length; i++) {
+                            for (int j = 0; j < ecouteGrille[i].length; j++) {
+                                if(ecouteGrille[i][j]==1){
+                                    ImageIcon imgCroix = new ImageIcon("croix.png");
+                                    JLabel imgLabel = new JLabel(imgCroix);
+                                    frame.add(imgLabel);
+                                }
+                                else if(ecouteGrille[i][j]==-1){
+                                    ImageIcon imgCroix = new ImageIcon("rond.png");
+                                    JLabel imgLabel = new JLabel(imgCroix);
+                                    frame.add(imgLabel);
+                                }
+                                else{
+                                    JButton button = new JButton();
+                                    button.addActionListener(new ActionListener() {
+                                        @Override
+                                        public void actionPerformed(ActionEvent e) {
+                                            // Remplacer le bouton par une image
+                                            Container container = button.getParent();
+                                            int index = container.getComponentZOrder(button);
+                                            container.remove(button);
+
+                                            // Charger l'image
+                                            ImageIcon imageIcon;
+                                            if(forme == 1){
+                                                imageIcon= new ImageIcon("croix.png");
+                                            }
+                                            else{
+                                                imageIcon= new ImageIcon("rond.png");
+                                            }
+                                            JLabel imageLabel = new JLabel(imageIcon);
+
+                                            // Ajouter l'image à la même position que le bouton précédent
+                                            container.add(imageLabel, index);
+
+                                            // Rafraîchir l'interface graphique
+                                            container.revalidate();
+                                            container.repaint();
+
+                                            int x = index / 3;
+                                            int y = index - x*3;
+
+                                            try {
+                                                ri.placerForme(x, y, forme);
+                                            } 
+                                            catch (Exception ex) {
+                                                System.out.println(ex.toString());
+                                            } 
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        frame.setVisible(true);
+
+                        for (Component component : frame.getContentPane().getComponents()){
+                            if(component instanceof JButton){
+                                component.setEnabled(true);
+                            }
                         }
                         
+                        JOptionPane.showMessageDialog(frame,"A vous de jouer...");
 
-                        if(ecouteGrille != null && !sameGrille(ecouteGrille, ri.getGrille())){
-                            ri.passerTour();
-                        }
+                        while(sameGrille(ecouteGrille, ri.getGrille()));
+                        ri.passerTour();
+                        
                             
                     } 
                     else {
-                        if(alreadySeenNotMyTurn==false){
-                            JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
-                            alreadySeenNotMyTurn=true;
-                            alreadySeenMyTurn=false;
+                        for (Component component : frame.getContentPane().getComponents()){
+                            if(component instanceof JButton){
+                                component.setEnabled(false);
+                            }
                         }
+                        
+                        JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
                        
-                        if (ecouteGrille != null && !sameGrille(ecouteGrille, ri.getGrille())) {
-                            frame.repaint();
-                        }
+                        while (sameGrille(ecouteGrille, ri.getGrille()));
+                        ri.passerTour();
                     }
                 }
             } 
@@ -192,6 +270,7 @@ public class Client implements Serializable {
     }
 
 
+    /*
     public static void main(String[] args) {
         JFrame frame = new JFrame("TicTacToe");
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -208,6 +287,7 @@ public class Client implements Serializable {
         frame.setVisible(true);
         frame.pack();
     }
+    */
 }
 
 

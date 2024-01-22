@@ -7,7 +7,7 @@ import java.rmi.registry.Registry;
 import java.util.Enumeration;
 
 public class Server {
-    public static void main(String[] args){
+    public Server(){
         try{    
             System.out.println("Server : construction...");
             Grille grille = new Grille();

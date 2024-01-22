@@ -6,6 +6,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     private int grille [][];
     private HashMap<Integer,Integer> joueurs;
+    private HashMap<Integer,Status> joueursStatus;
     private int tour;
 
 
@@ -18,6 +19,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
             }
         }
         joueurs = new HashMap<>();
+        joueursStatus = new HashMap<>();
         tour=0;
     }
 
@@ -60,6 +62,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         if (joueurs.size() < 2 && joueurs.get(idJoueur)==null) {
             int symbole = (joueurs.size() == 0) ? 1 : -1;
             joueurs.put(idJoueur, symbole);
+            joueursStatus.put(idJoueur, Status.CREATED);
             System.out.println(idJoueur+" nails the competition !");
             System.out.println(idJoueur+" : "+joueurs.get(idJoueur));
             return 0;
@@ -72,6 +75,21 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
             return 1;
         }
     }
+
+    public boolean allStatusReady(){
+        for (Integer key : joueursStatus.keySet()) {
+           if(joueursStatus.get(key)!=Status.READY){
+            return false;
+           }
+        }
+        return true;
+    }
+
+
+    public void sendStatus(int id, Status st){
+        joueursStatus.put(id, st);
+    }
+
 
     @Override
     public int placerForme(int x, int y, int forme) throws RemoteException{
