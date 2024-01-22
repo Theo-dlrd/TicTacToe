@@ -100,13 +100,6 @@ public class TicTacToe {
                 Thread server = new Thread(() -> new Server());
                 server.start();
 
-                try{
-                    wait(1000);
-                }
-                catch(InterruptedException e){
-                    System.out.println(e.toString());
-                } 
-
                 Thread client = new Thread(() -> new Client(frame, null));
                 client.start();
             }
