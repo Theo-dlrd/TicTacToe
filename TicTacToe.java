@@ -3,18 +3,16 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
+import java.rmi.ConnectException;
 import java.awt.event.ActionEvent;
-import java.awt.Component;
-
-import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
@@ -81,8 +79,24 @@ public class TicTacToe {
         setButtonAppearence(hostButton);
         JButton validButton = new JButton("Valider");
         setButtonAppearence(validButton);
-        JTextField nomText = new JTextField("Saisir le numéro de la partie");
 
+        JTextField nomText = new JTextField();
+        nomText.setAlignmentX(JFrame.CENTER_ALIGNMENT);
+        nomText.setPreferredSize(new Dimension(200, 30));
+
+        JLabel text = new JLabel("Saisir le numéro de la partie");
+        text.setAlignmentX(JFrame.CENTER_ALIGNMENT);
+        text.setPreferredSize(new Dimension(200, 30));
+
+        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(hostButton);
+        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(joinButton);
+        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(quitButton);
+
+        frame.add(panelImg, constraintsImg);
+        frame.add(panelBoutons, constraintsBut);
 
 
         quitButton.addActionListener(new ActionListener() {
@@ -95,7 +109,9 @@ public class TicTacToe {
         hostButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae){
-                frame.removeAll();
+                panelBoutons.removeAll();
+                panelBoutons.revalidate();
+                panelBoutons.repaint();
 
                 Thread server = new Thread(() -> new Server());
                 server.start();
@@ -108,35 +124,37 @@ public class TicTacToe {
         joinButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae){
-                frame.remove(hostButton);
-                frame.remove(joinButton);
-                frame.add(nomText);
-                frame.add(validButton);
+                panelBoutons.removeAll();
+                panelBoutons.add(text);
+                panelBoutons.add(nomText);
+                panelBoutons.add(validButton);
+                panelBoutons.add(Box.createVerticalStrut(20));
+                panelBoutons.add(quitButton);
+                panelBoutons.revalidate();
+                panelBoutons.repaint();
             }
         });
 
         validButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae){
-                frame.removeAll();
-
                 if(nomText.getText().length()!=0){
+                    System.out.println(nomText.getText());
+                    
+                    panelBoutons.removeAll();
+                    panelBoutons.add(Box.createVerticalStrut(20));
+                    text.setText("Recherche de la partie. Veuillez patienter...");
+                    text.setPreferredSize(new Dimension(300, 80));
+                    panelBoutons.add(text);
+
+                    panelBoutons.revalidate();
+                    panelBoutons.repaint();
+
                     Thread client = new Thread(() -> new Client(frame, nomText.getText()));
                     client.start();
                 }
             }
         });
-
-
-        panelBoutons.add(Box.createVerticalStrut(20));
-        panelBoutons.add(hostButton);
-        panelBoutons.add(Box.createVerticalStrut(20));
-        panelBoutons.add(joinButton);
-        panelBoutons.add(Box.createVerticalStrut(20));
-        panelBoutons.add(quitButton);
-
-        frame.add(panelImg, constraintsImg);
-        frame.add(panelBoutons, constraintsBut);
     }
     
     public static void main(String[] args) {

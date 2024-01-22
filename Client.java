@@ -223,6 +223,11 @@ public class Client {
                 System.out.println(ex.toString());
             }
         }
+        catch(ConnectException ce){
+            JOptionPane.showMessageDialog(frame, "Aucune partie trouvée !\nAu revoir !");
+            System.exit(1);
+
+        }
         catch(Exception e){
             System.out.println(e.toString());
         }        
