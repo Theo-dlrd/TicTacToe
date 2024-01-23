@@ -5,14 +5,12 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
-import java.rmi.ConnectException;
 import java.awt.event.ActionEvent;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
@@ -110,13 +108,23 @@ public class TicTacToe {
             @Override
             public void actionPerformed(ActionEvent ae){
                 panelBoutons.removeAll();
-                panelBoutons.revalidate();
                 panelBoutons.repaint();
+                panelImg.removeAll();
+                panelImg.repaint();
 
                 Thread server = new Thread(() -> new Server());
                 server.start();
 
-                Thread client = new Thread(() -> new Client(frame, null));
+                
+                Thread client = new Thread(() -> {
+                    try{
+                        wait(5000);
+                    }
+                    catch(Exception e){
+                        System.out.println(e.toString());
+                    }
+                    new Client(frame, null);
+                });
                 client.start();
             }
         });

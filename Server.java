@@ -3,7 +3,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.Enumeration;
 
 public class Server {
@@ -11,7 +10,7 @@ public class Server {
         try{    
             System.out.println("Server : construction...");
             Grille grille = new Grille();
-            Registry registry = LocateRegistry.createRegistry(1099);
+            LocateRegistry.createRegistry(1099);
             System.out.println("Objet Grille lié dans le RMIregistry.");
             Naming.rebind("rmi:/"+getIPAdress()+":1099/Grille", grille);
             System.out.println("Attente des invocations des clients...");

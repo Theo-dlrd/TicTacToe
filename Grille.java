@@ -76,7 +76,8 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         }
     }
 
-    public boolean allStatusReady(){
+    @Override
+    public boolean allStatusReady() throws RemoteException{
         for (Integer key : joueursStatus.keySet()) {
            if(joueursStatus.get(key)!=Status.READY){
             return false;
@@ -85,20 +86,38 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         return true;
     }
 
+    @Override
+    public Status getStatus(int id) throws RemoteException{
+        return joueursStatus.get(id);
+    }
 
-    public void sendStatus(int id, Status st){
+    @Override
+    public void sendStatus(int id, Status st) throws RemoteException{
         joueursStatus.put(id, st);
     }
 
 
     @Override
     public int placerForme(int x, int y, int forme) throws RemoteException{
-        this.grille[x][y] = forme;
-        if(win(x, y, forme)){
-            return 1;
+        if(this.grille[x][y]==0){
+            this.grille[x][y] = forme;
+            for (int i = 0; i < grille.length; i++) {
+                for (int j = 0; j < grille[i].length; j++) {
+                    System.out.print(grille[i][j]);
+                }
+                System.out.print("\n");
+            }
+            /* 
+            if(win(x, y, forme)){
+                return 1;
+            }
+            else if(isDraw()){
+                return 10;
+            }
+            */
         }
-        else if(isDraw()){
-            return 10;
+        else{
+            System.out.println("Emplacement déjà rempli. Choisissez-en un autre !");
         }
         return 0;
     }
@@ -111,6 +130,11 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
     @Override
     public void clear(){
         this.grille = new int[3][3];
+        for (int i = 0; i < grille.length; i++) {
+            for (int j = 0; j < grille[i].length; j++) {
+                this.grille[i][j]=0;
+            }
+        }
     }
 
     private boolean isDraw(){
@@ -129,7 +153,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
     }
 
     private boolean verifLine(int x, int y, int forme){
-        switch(y) {
+        switch(x) {
             case 0:
                 return (grille[x][y]==forme && grille[x+1][y]==forme && grille[x+2][y]==forme);
             

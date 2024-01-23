@@ -7,6 +7,7 @@ public interface GrilleInterface extends Remote{
 
     public boolean allStatusReady() throws RemoteException; 
     public void sendStatus(int id, Status st) throws RemoteException;
+    public Status getStatus(int id) throws RemoteException;
     public int getTour() throws RemoteException;
     public void passerTour() throws RemoteException;
     public int getNbJoueurs() throws RemoteException;

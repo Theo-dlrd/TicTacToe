@@ -1,10 +1,8 @@
-import java.awt.Dimension;
 import java.rmi.*;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Random;
-import java.awt.Toolkit;
 import java.awt.event.ActionListener;
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -14,24 +12,28 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.WindowConstants;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.Component;
 
 
 public class Client {
-    private static final int WINDOW_WIDTH = 900;
-    private static final int WINDOW_HEIGHT = 800;
-
     public int forme;
     public int id_joueur;
     private int[][] ecouteGrille;
-    private boolean monTour;
     
 
     public Client(JFrame frame, String ip){
+        frame.setLayout(new GridLayout(3, 3));
+
+        for(Component component: frame.getContentPane().getComponents()){
+            frame.remove(component);
+        }
+        frame.revalidate();
+        frame.repaint();
+
+        
+
         try{
             GrilleInterface ri;
             if(ip==null){
@@ -40,24 +42,18 @@ public class Client {
             else{
                 ri = (GrilleInterface) Naming.lookup("rmi:/"+ip+":1099/Grille");
             }
-            frame.setLayout(new GridLayout(3,3));
-            frame.setBounds(WINDOW_WIDTH/2-250, WINDOW_HEIGHT/2-250, 500, 500);
+
 
             Random random = new Random();
             int retourJoin;
             do{
                 this.id_joueur = random.nextInt(100)+1;
+                System.out.println("mon id joueur : "+this.id_joueur);
             }while((retourJoin = ri.rejoindrePartie(this.id_joueur))==-1);
 
             if(retourJoin==0){
                 this.forme = ri.getForme(this.id_joueur);
                 System.out.println("Début communication avec le serveur. Forme = "+this.forme+"!\n");
-                if(this.forme==1){
-                    this.monTour=true;
-                }
-                else{
-                    this.monTour=false;
-                }
             }
             else if(retourJoin==-1){
                 JOptionPane.showMessageDialog(frame, "Un autre utilisateur utilise ce pseudo !");
@@ -68,156 +64,189 @@ public class Client {
                 System.exit(retourJoin);
             }
 
-            while (ri.getNbJoueurs()<2) {
+            if(ip==null){
                 ri.sendStatus(this.id_joueur, GrilleInterface.Status.WAITING);
-                JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
+            }
+            else{
+                ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
             }
 
-            ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
+            if(ri.getStatus(this.id_joueur)==GrilleInterface.Status.WAITING){
+                JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
+                ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
+            }
+
+            while (ri.getNbJoueurs()<2);
 
             frame.setVisible(true);
-            frame.repaint();
 
             while(!ri.allStatusReady());
-           
-            /*
-            for (int i = 0; i < 9; i++) {
-                JButton button = new JButton();
-                button.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                            // Remplacer le bouton par une image
-                            Container container = button.getParent();
-                            int index = container.getComponentZOrder(button);
-                            System.out.println(index);
-                            container.remove(button);
 
-                            // Charger l'image
-                            ImageIcon imageIcon;
-                            if(forme == 1){
-                                imageIcon= new ImageIcon("croix.png");
+            /* 
+            ecouteGrille = ri.getGrille();
+            for (int i = 0; i < ecouteGrille.length; i++) {
+                for (int j = 0; j < ecouteGrille[i].length; j++) {
+                    JButton button = new JButton();
+                    button.setVisible(true);
+                    button.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent ae){
+                            Container container = button.getParent();
+                            System.out.println(container);
+                            int index = container.getComponentZOrder(button);
+                            System.out.println("Index = "+index);
+                            
+                            frame.remove(button);
+
+                            ImageIcon img;
+                            if(forme==1){
+                                img = new ImageIcon("croix.png");
                             }
                             else{
-                                imageIcon= new ImageIcon("rond.png");
+                                img = new ImageIcon("rond.png");
                             }
-                            JLabel imageLabel = new JLabel(imageIcon);
-
-                            // Ajouter l'image à la même position que le bouton précédent
-                            container.add(imageLabel, index);
-
-                            // Rafraîchir l'interface graphique
-                            container.revalidate();
-                            container.repaint();
-
+                            JLabel imgLb = new JLabel(img);
+                            frame.add(imgLb, index);
+                            
                             int x = index / 3;
-                            int y = index - x*3;
-
+                            int y = index % 3;
+                            System.out.println(x+" - "+y);
                             try {
                                 ri.placerForme(x, y, forme);
-                                ri.passerTour();
                             } 
-                            catch (Exception ex) {
-                                System.out.println(ex.toString());
+                            catch (Exception e) {
+                                System.out.println(e);
                             }
-                        
-                    }
-                });
-                frame.add(button);
+                            frame.revalidate();
+                            frame.repaint();
+                        }
+                    });
+                    frame.add(button);
+                }
             }
-           */
 
+            frame.revalidate();
+            frame.repaint();
 
+            */
             boolean play = true;
-            this.monTour = false;
             try{
-                ri.passerTour();
+                //Sélection aléatoire du joueur qui commence
+                for(int i=0; i<random.nextInt(10)+1; i++){
+                    ri.passerTour();
+                }
+
+                wait(3000);
+
+                if(ri.getTour() == this.id_joueur){
+                    JOptionPane.showMessageDialog(frame,"A vous de commencer...");
+                }
+                else{
+                    JOptionPane.showMessageDialog(frame,"Votre adversaire commence...");
+                }
+                
                 while(play){
                     ecouteGrille = ri.getGrille();
                     // Vérifier le tour du joueur
-                    if (ri.getTour() == this.id_joueur) {
-
-                        frame.removeAll();
-                        for (int i = 0; i < ecouteGrille.length; i++) {
-                            for (int j = 0; j < ecouteGrille[i].length; j++) {
-                                if(ecouteGrille[i][j]==1){
-                                    ImageIcon imgCroix = new ImageIcon("croix.png");
-                                    JLabel imgLabel = new JLabel(imgCroix);
-                                    frame.add(imgLabel);
-                                }
-                                else if(ecouteGrille[i][j]==-1){
-                                    ImageIcon imgCroix = new ImageIcon("rond.png");
-                                    JLabel imgLabel = new JLabel(imgCroix);
-                                    frame.add(imgLabel);
-                                }
-                                else{
-                                    JButton button = new JButton();
-                                    button.addActionListener(new ActionListener() {
-                                        @Override
-                                        public void actionPerformed(ActionEvent e) {
-                                            // Remplacer le bouton par une image
-                                            Container container = button.getParent();
-                                            int index = container.getComponentZOrder(button);
-                                            container.remove(button);
-
-                                            // Charger l'image
-                                            ImageIcon imageIcon;
-                                            if(forme == 1){
-                                                imageIcon= new ImageIcon("croix.png");
-                                            }
-                                            else{
-                                                imageIcon= new ImageIcon("rond.png");
-                                            }
-                                            JLabel imageLabel = new JLabel(imageIcon);
-
-                                            // Ajouter l'image à la même position que le bouton précédent
-                                            container.add(imageLabel, index);
-
-                                            // Rafraîchir l'interface graphique
-                                            container.revalidate();
-                                            container.repaint();
-
-                                            int x = index / 3;
-                                            int y = index - x*3;
-
-                                            try {
-                                                ri.placerForme(x, y, forme);
-                                            } 
-                                            catch (Exception ex) {
-                                                System.out.println(ex.toString());
-                                            } 
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                        frame.setVisible(true);
+                    if (ri.getTour() == this.id_joueur){
+                        //Lorsque l'on jouer pour la première fois
+                        /* 
+                        ArrayList<JButton> listButton = new ArrayList<JButton>();
 
                         for (Component component : frame.getContentPane().getComponents()){
                             if(component instanceof JButton){
                                 component.setEnabled(true);
+                                listButton.add((JButton)component);
                             }
                         }
-                        
-                        JOptionPane.showMessageDialog(frame,"A vous de jouer...");
+                        System.out.println("Taille list boutons = "+listButton.size());
+                        */
 
+                        frame.removeAll();
+                        frame.repaint();
+                        for (int i = 0; i < ecouteGrille.length; i++) {
+                            for (int j = 0; j < ecouteGrille[i].length; j++) {
+                                switch (ecouteGrille[i][j]) {
+                                    case 1:
+                                        ImageIcon imgC = new ImageIcon("croix.png");
+                                        JLabel imgCLb = new JLabel(imgC);
+                                        frame.add(imgCLb);
+                                        break;
+                                    case -1:
+                                        ImageIcon imgR = new ImageIcon("rond.png");
+                                        JLabel imgRLb = new JLabel(imgR);
+                                        frame.add(imgRLb);
+                                        break;
+                                    case 0:
+                                        JButton button = new JButton();
+                                        button.setVisible(true);
+                                        button.addActionListener(new ActionListener() {
+                                            @Override
+                                            public void actionPerformed(ActionEvent ae){
+                                                Container container = button.getParent();
+                                                System.out.println(container);
+                                                int index = container.getComponentZOrder(button);
+                                                System.out.println("Index = "+index);
+                                                
+                                                frame.remove(button);
+                    
+                                                ImageIcon img;
+                                                if(forme==1){
+                                                    img = new ImageIcon("croix.png");
+                                                }
+                                                else{
+                                                    img = new ImageIcon("rond.png");
+                                                }
+                                                JLabel imgLb = new JLabel(img);
+                                                frame.add(imgLb, index);
+                                                
+                                                int x = index / 3;
+                                                int y = index % 3;
+                                                System.out.println(x+" - "+y);
+                                                try {
+                                                    ri.placerForme(x, y, forme);
+                                                } 
+                                                catch (Exception e) {
+                                                    System.out.println(e);
+                                                }
+                                                frame.revalidate();
+                                                frame.repaint();
+                                            }
+                                        });
+                                        button.setEnabled(true);
+                                        frame.add(button);
+                                        break;
+                                }
+                            }
+                        }
+                        frame.revalidate();
+                        frame.repaint();
+                        
+                        //JOptionPane.showMessageDialog(frame,"A vous de jouer...");
+                        System.out.println("avant boucle verif idem");
                         while(sameGrille(ecouteGrille, ri.getGrille()));
+                        System.out.println("apres boucle verif idem");
+
                         ri.passerTour();
                         
-                            
                     } 
                     else {
+                        /*
                         for (Component component : frame.getContentPane().getComponents()){
                             if(component instanceof JButton){
                                 component.setEnabled(false);
                             }
                         }
+                        */
+                        frame.repaint();
                         
-                        JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
-                       
+                        //JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
+                        System.out.println("avant boucle verif idem NMT");
                         while (sameGrille(ecouteGrille, ri.getGrille()));
-                        ri.passerTour();
+                        System.out.println("avant boucle verif idem NMT");
                     }
                 }
+            
             } 
             catch (Exception ex) {
                 System.out.println(ex.toString());
@@ -225,12 +254,24 @@ public class Client {
         }
         catch(ConnectException ce){
             JOptionPane.showMessageDialog(frame, "Aucune partie trouvée !\nAu revoir !");
+            System.out.println(ce.toString());
             System.exit(1);
 
         }
         catch(Exception e){
             System.out.println(e.toString());
         }        
+    }
+
+    private boolean grilleVide(int[][] grille){
+        for (int i = 0; i < grille.length; i++) {
+            for (int j = 0; j < grille[i].length; j++) {
+                if(grille[i][j]!=0){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 
@@ -273,26 +314,6 @@ public class Client {
         }
         return true;
     }
-
-
-    /*
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("TicTacToe");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setPreferredSize(new Dimension(WINDOW_WIDTH,WINDOW_HEIGHT));
-        Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = (int) ((dimension.getWidth()-WINDOW_WIDTH)/2);
-        int y = (int) ((dimension.getHeight()-WINDOW_HEIGHT)/2);
-        frame.setBackground(Color.WHITE);
-        frame.setLocation(x, y);
-        frame.setResizable(false);
-
-        new Client(frame);
-
-        frame.setVisible(true);
-        frame.pack();
-    }
-    */
 }
 
 
