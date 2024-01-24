@@ -1,5 +1,4 @@
 import java.rmi.*;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Random;
 import java.awt.event.ActionListener;
@@ -12,9 +11,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.Component;
+import java.awt.Container;
 
 
 public class Client {
@@ -24,16 +23,14 @@ public class Client {
     
 
     public Client(JFrame frame, String ip){
-        frame.setLayout(new GridLayout(3, 3));
-
         for(Component component: frame.getContentPane().getComponents()){
             frame.remove(component);
         }
         frame.revalidate();
         frame.repaint();
 
+        frame.setLayout(new GridLayout(3, 3));
         
-
         try{
             GrilleInterface ri;
             if(ip==null){
@@ -82,53 +79,6 @@ public class Client {
 
             while(!ri.allStatusReady());
 
-            /* 
-            ecouteGrille = ri.getGrille();
-            for (int i = 0; i < ecouteGrille.length; i++) {
-                for (int j = 0; j < ecouteGrille[i].length; j++) {
-                    JButton button = new JButton();
-                    button.setVisible(true);
-                    button.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent ae){
-                            Container container = button.getParent();
-                            System.out.println(container);
-                            int index = container.getComponentZOrder(button);
-                            System.out.println("Index = "+index);
-                            
-                            frame.remove(button);
-
-                            ImageIcon img;
-                            if(forme==1){
-                                img = new ImageIcon("croix.png");
-                            }
-                            else{
-                                img = new ImageIcon("rond.png");
-                            }
-                            JLabel imgLb = new JLabel(img);
-                            frame.add(imgLb, index);
-                            
-                            int x = index / 3;
-                            int y = index % 3;
-                            System.out.println(x+" - "+y);
-                            try {
-                                ri.placerForme(x, y, forme);
-                            } 
-                            catch (Exception e) {
-                                System.out.println(e);
-                            }
-                            frame.revalidate();
-                            frame.repaint();
-                        }
-                    });
-                    frame.add(button);
-                }
-            }
-
-            frame.revalidate();
-            frame.repaint();
-
-            */
             boolean play = true;
             try{
                 //Sélection aléatoire du joueur qui commence
@@ -136,7 +86,7 @@ public class Client {
                     ri.passerTour();
                 }
 
-                wait(3000);
+                Thread.sleep(1000);
 
                 if(ri.getTour() == this.id_joueur){
                     JOptionPane.showMessageDialog(frame,"A vous de commencer...");
@@ -147,106 +97,92 @@ public class Client {
                 
                 while(play){
                     ecouteGrille = ri.getGrille();
+
                     // Vérifier le tour du joueur
+                    for (Component composant : frame.getContentPane().getComponents()) {
+                        frame.remove(composant);
+                    }
+
                     if (ri.getTour() == this.id_joueur){
-                        //Lorsque l'on jouer pour la première fois
-                        /* 
-                        ArrayList<JButton> listButton = new ArrayList<JButton>();
-
-                        for (Component component : frame.getContentPane().getComponents()){
-                            if(component instanceof JButton){
-                                component.setEnabled(true);
-                                listButton.add((JButton)component);
-                            }
-                        }
-                        System.out.println("Taille list boutons = "+listButton.size());
-                        */
-
-                        frame.removeAll();
-                        frame.repaint();
+                        /*
                         for (int i = 0; i < ecouteGrille.length; i++) {
                             for (int j = 0; j < ecouteGrille[i].length; j++) {
-                                switch (ecouteGrille[i][j]) {
-                                    case 1:
-                                        ImageIcon imgC = new ImageIcon("croix.png");
-                                        JLabel imgCLb = new JLabel(imgC);
-                                        frame.add(imgCLb);
-                                        break;
-                                    case -1:
-                                        ImageIcon imgR = new ImageIcon("rond.png");
-                                        JLabel imgRLb = new JLabel(imgR);
-                                        frame.add(imgRLb);
-                                        break;
-                                    case 0:
-                                        JButton button = new JButton();
-                                        button.setVisible(true);
-                                        button.addActionListener(new ActionListener() {
-                                            @Override
-                                            public void actionPerformed(ActionEvent ae){
-                                                Container container = button.getParent();
-                                                System.out.println(container);
-                                                int index = container.getComponentZOrder(button);
-                                                System.out.println("Index = "+index);
-                                                
+                                if(ecouteGrille[i][j]==1){
+                                    ImageIcon imgRond = new ImageIcon("rond.png");
+                                    JLabel rondLb = new JLabel(imgRond);
+                                    frame.add(rondLb);
+                                }
+                                else if(ecouteGrille[i][j]==-1){
+                                    ImageIcon imgCroix = new ImageIcon("croix.png");
+                                    JLabel croixLb = new JLabel(imgCroix);
+                                    frame.add(croixLb);
+                                }
+                                else{
+                                    JButton button = new JButton();
+                                    button.setVisible(true);
+                                    button.addActionListener(new ActionListener() {
+                                        @Override
+                                        public void actionPerformed(ActionEvent ae){
+                                            Container container = button.getParent();
+                                            System.out.println(container);
+                                            int index = container.getComponentZOrder(button);
+                                            System.out.println("index = "+index);
+                                            
+                                            // Vérifier si l'emplacement est vide dans la grille
+                                            int x = index / 3;
+                                            int y = index % 3;
+
+                                            System.out.println("x : "+x+"; y : "+y);
+                                            if(ecouteGrille[x][y] == 0){
+                                                // Placer la forme sur la grille
+                                                try {
+                                                    ri.placerForme(x, y, forme);
+                                                } catch (Exception e) {
+                                                    System.out.println(e);
+                                                }
+                    
+                                                // Mettre à jour l'interface graphique
                                                 frame.remove(button);
                     
                                                 ImageIcon img;
                                                 if(forme==1){
                                                     img = new ImageIcon("croix.png");
-                                                }
-                                                else{
+                                                } 
+                                                else {
                                                     img = new ImageIcon("rond.png");
                                                 }
                                                 JLabel imgLb = new JLabel(img);
-                                                frame.add(imgLb, index);
-                                                
-                                                int x = index / 3;
-                                                int y = index % 3;
-                                                System.out.println(x+" - "+y);
-                                                try {
-                                                    ri.placerForme(x, y, forme);
-                                                } 
-                                                catch (Exception e) {
-                                                    System.out.println(e);
-                                                }
-                                                frame.revalidate();
-                                                frame.repaint();
+                                                frame.getContentPane().add(imgLb);
+                                            } 
+                                            else {
+                                                // Informer que l'emplacement est déjà occupé
+                                                JOptionPane.showMessageDialog(frame, "Emplacement déjà rempli. Choisissez-en un autre !");
                                             }
-                                        });
-                                        button.setEnabled(true);
-                                        frame.add(button);
-                                        break;
+                                        }
+                                    });
+                                    frame.add(button);
                                 }
                             }
                         }
                         frame.revalidate();
                         frame.repaint();
-                        
-                        //JOptionPane.showMessageDialog(frame,"A vous de jouer...");
-                        System.out.println("avant boucle verif idem");
+                        */
+
+                        majEcran(frame, ecouteGrille, ri);
+
                         while(sameGrille(ecouteGrille, ri.getGrille()));
-                        System.out.println("apres boucle verif idem");
 
                         ri.passerTour();
-                        
-                    } 
+                    }
                     else {
-                        /*
-                        for (Component component : frame.getContentPane().getComponents()){
-                            if(component instanceof JButton){
-                                component.setEnabled(false);
-                            }
+                        // Attendre que ce soit le tour du joueur actuel
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                        */
-                        frame.repaint();
-                        
-                        //JOptionPane.showMessageDialog(frame,"Au tour de votre adversaire. Veuillez patienter...");
-                        System.out.println("avant boucle verif idem NMT");
-                        while (sameGrille(ecouteGrille, ri.getGrille()));
-                        System.out.println("avant boucle verif idem NMT");
                     }
                 }
-            
             } 
             catch (Exception ex) {
                 System.out.println(ex.toString());
@@ -313,6 +249,70 @@ public class Client {
             }
         }
         return true;
+    }
+
+    private void majEcran(JFrame frame, int[][] ecouteGrille, GrilleInterface ri){
+        for (Component composant : frame.getContentPane().getComponents()) {
+            frame.remove(composant);
+        }
+
+        for (int i = 0; i < ecouteGrille.length; i++) {
+            for (int j = 0; j < ecouteGrille.length; j++) {
+                if(ecouteGrille[i][j]==1){
+                    ImageIcon imgCroix = new ImageIcon("croix.png");
+                    JLabel croixLb = new JLabel(imgCroix);
+                    frame.add(croixLb);
+                }
+                else if(ecouteGrille[i][j]==-1){
+                    ImageIcon imgRond = new ImageIcon("rond.png");
+                    JLabel rondLb = new JLabel(imgRond);
+                    frame.add(rondLb);
+                }
+                else{
+                    JButton button = new JButton();
+                    button.setVisible(true);
+                    button.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent ae){
+                            Container container = button.getParent();
+                            System.out.println(container);
+                            int index = container.getComponentZOrder(button);
+                            System.out.println("index = "+index);
+                            
+                            // Vérifier si l'emplacement est vide dans la grille
+                            int x = index / 3;
+                            int y = index % 3;
+
+                            System.out.println("x : "+x+"; y : "+y);
+                            if(ecouteGrille[x][y] == 0){
+                                // Placer la forme sur la grille
+                                // Mettre à jour l'interface graphique
+                                frame.remove(button);
+
+                                int[][] grille = new int[3][3];
+                                try {
+                                    ri.placerForme(x, y, forme);
+                                    grille=ri.getGrille();
+                                } 
+                                catch(Exception e) {
+                                    System.out.println(e);
+                                }
+
+                                
+                                majEcran(frame, grille, ri);
+                            } 
+                            else {
+                                // Informer que l'emplacement est déjà occupé
+                                JOptionPane.showMessageDialog(frame, "Emplacement déjà rempli. Choisissez-en un autre !");
+                            }
+                        }
+                    });
+                    frame.add(button);
+                }
+            }
+        }
+        frame.revalidate();
+        frame.repaint();
     }
 }
 
