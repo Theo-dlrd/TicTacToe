@@ -11,17 +11,26 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.Timer;
+
 import java.awt.GridLayout;
 import java.awt.Component;
 import java.awt.Container;
 
 
+/**
+ * Classe implémentant les actions et affichages des clients sur la fenêtre.
+ */
 public class Client {
     public int forme;
     public int id_joueur;
     private int[][] ecouteGrille;
-    
 
+    /**
+     * Méthode d'instanciation du client.
+     * @param frame [JFrame] La page sur laquelle les éléments visueles seront affichés.
+     * @param ip    [String] L'adresse ip interne du serveur (null pour le client qui créer la partie).
+     */
     public Client(JFrame frame, String ip){
         for(Component component: frame.getContentPane().getComponents()){
             frame.remove(component);
@@ -29,9 +38,12 @@ public class Client {
         frame.revalidate();
         frame.repaint();
 
+
         frame.setLayout(new GridLayout(3, 3));
         
+
         try{
+            //Gestion de la partie serveur
             GrilleInterface ri;
             if(ip==null){
                 ri = (GrilleInterface) Naming.lookup("rmi:/"+this.getIPAdress()+":1099/Grille");
@@ -73,10 +85,12 @@ public class Client {
                 ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
             }
 
+            //Vérifier que l'on a bien 2 joueurs
             while (ri.getNbJoueurs()<2);
 
             frame.setVisible(true);
 
+            //Vérifier que les deux joueurs sont prets
             while(!ri.allStatusReady());
 
             boolean play = true;
@@ -104,85 +118,65 @@ public class Client {
                     }
 
                     if (ri.getTour() == this.id_joueur){
-                        /*
-                        for (int i = 0; i < ecouteGrille.length; i++) {
-                            for (int j = 0; j < ecouteGrille[i].length; j++) {
-                                if(ecouteGrille[i][j]==1){
-                                    ImageIcon imgRond = new ImageIcon("rond.png");
-                                    JLabel rondLb = new JLabel(imgRond);
-                                    frame.add(rondLb);
-                                }
-                                else if(ecouteGrille[i][j]==-1){
-                                    ImageIcon imgCroix = new ImageIcon("croix.png");
-                                    JLabel croixLb = new JLabel(imgCroix);
-                                    frame.add(croixLb);
-                                }
-                                else{
-                                    JButton button = new JButton();
-                                    button.setVisible(true);
-                                    button.addActionListener(new ActionListener() {
-                                        @Override
-                                        public void actionPerformed(ActionEvent ae){
-                                            Container container = button.getParent();
-                                            System.out.println(container);
-                                            int index = container.getComponentZOrder(button);
-                                            System.out.println("index = "+index);
-                                            
-                                            // Vérifier si l'emplacement est vide dans la grille
-                                            int x = index / 3;
-                                            int y = index % 3;
-
-                                            System.out.println("x : "+x+"; y : "+y);
-                                            if(ecouteGrille[x][y] == 0){
-                                                // Placer la forme sur la grille
-                                                try {
-                                                    ri.placerForme(x, y, forme);
-                                                } catch (Exception e) {
-                                                    System.out.println(e);
-                                                }
-                    
-                                                // Mettre à jour l'interface graphique
-                                                frame.remove(button);
-                    
-                                                ImageIcon img;
-                                                if(forme==1){
-                                                    img = new ImageIcon("croix.png");
-                                                } 
-                                                else {
-                                                    img = new ImageIcon("rond.png");
-                                                }
-                                                JLabel imgLb = new JLabel(img);
-                                                frame.getContentPane().add(imgLb);
-                                            } 
-                                            else {
-                                                // Informer que l'emplacement est déjà occupé
-                                                JOptionPane.showMessageDialog(frame, "Emplacement déjà rempli. Choisissez-en un autre !");
-                                            }
-                                        }
-                                    });
-                                    frame.add(button);
-                                }
-                            }
-                        }
-                        frame.revalidate();
-                        frame.repaint();
-                        */
 
                         majEcran(frame, ecouteGrille, ri);
 
                         while(sameGrille(ecouteGrille, ri.getGrille()));
 
-                        ri.passerTour();
+                        if(ri.victoire(this.forme) || ri.nul()){
+                            play=false;
+                            ecouteGrille = ri.getGrille();
+                            majEcran(frame, ecouteGrille, ri);
+                        }
+                        else{
+                            ri.passerTour();
+                        }
                     }
                     else {
                         // Attendre que ce soit le tour du joueur actuel
                         try {
                             Thread.sleep(1000);
-                        } catch (InterruptedException e) {
+                        } 
+                        catch(InterruptedException e){
                             e.printStackTrace();
+                        }
+
+                        if(ri.victoire(ri.getOpponentForm(this.id_joueur)) || ri.nul()){
+                            play=false;
+                            ecouteGrille = ri.getGrille();
+                            majEcran(frame, ecouteGrille, ri);
                         }
                     }
                 }
+                try {
+                    Thread.sleep(1000);
+                } 
+                catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+
+                //Déterminer l'issue de la partie
+                int id_gagnant = ri.getGagnant();
+                if(id_gagnant!=0){
+                    if(id_gagnant==this.id_joueur){
+                        JOptionPane.showMessageDialog(frame, "Félicitations ! Vous avez gagné !");
+                        System.exit(0);
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(frame, "Dommage ! Tu as perdu !");
+                        System.exit(0);
+                    }
+                }
+                else if(ri.nul()){
+                    JOptionPane.showMessageDialog(frame, "Oufff ! Egalité !");
+                    System.exit(0);
+                }
+                else{
+                    JOptionPane.showMessageDialog(frame, "Erreur : finalité non trouvée !");
+                    System.exit(-1);
+                }
+
+
             } 
             catch (Exception ex) {
                 System.out.println(ex.toString());
@@ -199,18 +193,10 @@ public class Client {
         }        
     }
 
-    private boolean grilleVide(int[][] grille){
-        for (int i = 0; i < grille.length; i++) {
-            for (int j = 0; j < grille[i].length; j++) {
-                if(grille[i][j]!=0){
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-
+    /**
+     * Méthode permettant de récupérer l'adresse ip locale de la machine sur laquelle le client est lancé.
+     * @return [String] L'adresse ip locale du client.
+     */
     private String getIPAdress(){
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -240,6 +226,12 @@ public class Client {
     }
 
 
+    /**
+     * Méthode de vérification d'égalité entre deux matrice. Permet le passage de tour.
+     * @param grille1 [int[][]] Première grille à vérifier.
+     * @param grille2 [int[][]] Deuxième grille à vérifier.
+     * @return [Boolean] Un booléen indiquant si les deux matrices sont égales ou pas.
+     */
     private boolean sameGrille(int[][] grille1, int[][] grille2){
         for (int i = 0; i < grille1.length; i++) {
             for (int j = 0; j < grille1[i].length; j++) {
@@ -251,6 +243,13 @@ public class Client {
         return true;
     }
 
+
+    /**
+     * Méthode de mise à jour de l'écran des joueurs après que l'un des deux ait joué.
+     * @param frame [JFrame] Affichage dans la fenêtre à modifier.
+     * @param ecouteGrille  [int[][]] Matrice de la grille qui va servir de base pour mettre à jour l'interface.
+     * @param ri [GrilleInterface] Instanciation de la grille qui permet d'appeler les méthodes liées à celle-ci.
+     */
     private void majEcran(JFrame frame, int[][] ecouteGrille, GrilleInterface ri){
         for (Component composant : frame.getContentPane().getComponents()) {
             frame.remove(composant);
@@ -289,17 +288,16 @@ public class Client {
                                 // Mettre à jour l'interface graphique
                                 frame.remove(button);
 
-                                int[][] grille = new int[3][3];
                                 try {
                                     ri.placerForme(x, y, forme);
-                                    grille=ri.getGrille();
                                 } 
                                 catch(Exception e) {
                                     System.out.println(e);
                                 }
 
-                                
-                                majEcran(frame, grille, ri);
+                                for (Component composant : frame.getContentPane().getComponents()) {
+                                    frame.remove(composant);
+                                }
                             } 
                             else {
                                 // Informer que l'emplacement est déjà occupé
@@ -311,8 +309,15 @@ public class Client {
                 }
             }
         }
-        frame.revalidate();
-        frame.repaint();
+        Timer timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.revalidate();
+                frame.repaint();
+            }
+        });
+
+        timer.start();
     }
 }
 

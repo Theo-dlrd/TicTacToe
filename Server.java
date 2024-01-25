@@ -5,7 +5,15 @@ import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.util.Enumeration;
 
+
+/**
+ * Classe permettant l'implémentation du serveur avec instanciation de l'objet grille qui sera utilisé par les clients
+ */
 public class Server {
+
+    /**
+     * Méthode d'instanciation du serveur.
+     */
     public Server(){
         try{    
             System.out.println("Server : construction...");
@@ -21,6 +29,10 @@ public class Server {
         }
     }
 
+    /**
+     * Méthode permettant de récupérer l'adresse ip locale de la machien sur laquelle le serveur sera hébergé.
+     * @return [String] L'adresse ip locale du serveur.
+     */
     private static String getIPAdress(){
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();

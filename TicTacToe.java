@@ -13,17 +13,25 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.BoxLayout;
 
+
+/**
+ * Classe permettant d'implémenter le menu du TicTacToe.
+ */
 public class TicTacToe {
     private static final int WINDOW_WIDTH = 900;
     private static final int WINDOW_HEIGHT = 800;
 
+    /**
+     * Méthode d'instanciation de la fenêtre du tictactoe avec le menu d'hébergement du serveur et le menu d'arrivée sur un serveur existant par le client.
+     */
     public TicTacToe(){
         //Paramètres de la fenêtre
         JFrame frame = new JFrame("TicTacToe");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(WINDOW_WIDTH,WINDOW_HEIGHT));
         Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
         int x = (int) ((dimension.getWidth()-WINDOW_WIDTH)/2);
@@ -41,6 +49,10 @@ public class TicTacToe {
         frame.setVisible(true);
     }
 
+    /**
+     * Méthode permettant d'attribuer au bouton passé en paramètre des caractéristiques particulière.
+     * @param button [JButton] Le bouton à personnaliser.
+     */
     public void setButtonAppearence(JButton button){
         button.setBackground(Color.lightGray);
         button.setForeground(Color.black);
@@ -49,6 +61,10 @@ public class TicTacToe {
         button.setPreferredSize(new Dimension(200, 30));
     }
 
+    /**
+     * Méthode d'implementation du menu ainsi que les comportements des différents boutons présents sur la fenêtre.
+     * @param frame [JFrame] La frame(fenêtre) du jeu.
+     */
     private void menu(JFrame frame){
         JPanel panelImg = new JPanel();
         GridBagConstraints constraintsImg = new GridBagConstraints();
@@ -86,7 +102,7 @@ public class TicTacToe {
         text.setAlignmentX(JFrame.CENTER_ALIGNMENT);
         text.setPreferredSize(new Dimension(200, 30));
 
-        panelBoutons.add(Box.createVerticalStrut(20));
+        panelBoutons.add(Box.createVerticalStrut(20));  //Ajouter un petit espace vertical
         panelBoutons.add(hostButton);
         panelBoutons.add(Box.createVerticalStrut(20));
         panelBoutons.add(joinButton);
@@ -163,8 +179,15 @@ public class TicTacToe {
             }
         });
     }
-    
+
+
+    /**
+     * Méthode statique principale du jeu.
+     * @param args Argument du main par défaut.
+     */
     public static void main(String[] args) {
-        new TicTacToe();
+        SwingUtilities.invokeLater(() -> {
+            new TicTacToe();
+        }); 
     }
 }
