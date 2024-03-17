@@ -19,7 +19,7 @@ Le but de ce travail étant de laisser cours à l'imagination de l'étudiant con
 ## Utilisation
 
 Très simple :
-Lancez les deux clients : ```java Client```
+Lancez les deux clients : ```java Client```.
 L'un lancera le serveur tandis que l'autre n'aura qu'à rejoindre la partie.
 Amusez-vous bien !
 
