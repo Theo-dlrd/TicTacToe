@@ -8,10 +8,29 @@ import java.util.HashMap;
  */
 public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
+    /**
+     * Grille d'entier qui sera modifiée par les clients
+     */
     private int grille [][];
+
+    /**
+     * Dictionnaire qui associe l'identifiant du joueur à l'entier caractérisant sa forme (1=croix,-1=rond).
+     */
     private HashMap<Integer,Integer> joueurs;
+
+    /**
+     * Dictionnaire qui associe l'identifiant du joueur à son statut.
+     */
     private HashMap<Integer,Status> joueursStatus;
+
+    /**
+     * Entier prenant comme valeur l'identifiant d'un joueur. Permet de savoir quel joueur doit jouer.
+     */
     private int tour;
+
+    /**
+     * Entier prenant comme valeur l'identifiant du joueur gagnant. En cas d'égalité, prend zéro.
+     */
     private int id_gagnant;
 
     /**
@@ -48,6 +67,7 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
      * Méthode permettant de récupérer la forme de l'adversaire.
      * @param id [Integer] Le numero d'identifiant du joueur courant.
      * @return [Integer] L'entier qui caractérise la forme de l'adversaire.
+     * @throws RemoteException Si une erreur survient lors de la connection au serveur ou lors de l'établissement du réseau par le serveur.
      */
     @Override
     public int getOpponentForm(int id) throws RemoteException{
@@ -174,9 +194,10 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
      * Méthode permettant d'assigner à un joueur un statut.
      * @param id [Integer] Le numero d'identifiant d'un joueur.
      * @param st [Status] Le statut à assigner au joueur.
+     * @throws RemoteException Si une erreur survient lors de la connection au serveur ou lors de l'établissement du réseau par le serveur.
      */
     @Override
-    public void sendStatus(int id, Status st) throws RemoteException{
+    public void setStatus(int id, Status st) throws RemoteException{
         joueursStatus.put(id, st);
     }
 
@@ -233,8 +254,9 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
     /**
      * Méthode verifiant que la grille est complétée. Permet d'obteniur le cas où on arrive sur une égalité.
      * @return [Boolean] Un booléen qui dis si les joueurs sont dans une configuration d'égalité.
+     * @throws RemoteException Si une erreur survient lors de la connection au serveur ou lors de l'établissement du réseau par le serveur.
      */
-    public boolean nul(){
+    public boolean nul() throws RemoteException{
         for (int i = 0; i < grille.length; i++) {
             for (int j = 0; j < grille[i].length; j++) {
                 if(grille[i][j]== 0){
@@ -248,12 +270,11 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     /**
      * Méthode vérifiant que la dernière forme placée permet d'obtenir une configuration gagnante pouyr l'un des deux joueurs.
-     * @param x [Integer] Ligne sur laquelle la dernière forme a été placé.
-     * @param y [Integer] Colonne sur laquelle la dernière forme a été placée.
      * @param forme [Integer] Forme du joueur dernièrement placée.
      * @return [Boolean] Booléen indiquant si on est dans une configuration gagnante ou pas.
+     * @throws RemoteException Si une erreur survient lors de la connection au serveur ou lors de l'établissement du réseau par le serveur.
      */
-    public boolean victoire(int forme){
+    public boolean victoire(int forme) throws RemoteException{
         if(verifLine(forme) || verifDiag(forme) || verifColumn(forme)){
             for (HashMap.Entry<Integer, Integer> entry : joueurs.entrySet()) {
                 if (entry.getValue().equals(forme)) {
@@ -268,16 +289,19 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
         }
     }
 
+
+    /**
+     * Méthode retournant le numero d'identifiant du joueur gagnant
+     * @return [Integer] Le numero d'identifiant du gagnant
+     * @throws RemoteException Si une erreur survient lors de la connection au serveur ou lors de l'établissement du réseau par le serveur.
+     */
     public int getGagnant() throws RemoteException{
         return this.id_gagnant;
     }
 
 
-
     /**
      * Méthode permettant de vérifier que le dernier point placé permet une victoire verticalement.
-     * @param x [Integer] Ligne sur laquelle la dernière forme a été placé.
-     * @param y [Integer] Colonne sur laquelle la dernière forme a été placée.
      * @param forme [Integer] Forme du joueur dernièrement placée.
      * @return [Boolean] Booléen indiquant si on est dans une configuration verticale gagnante ou pas.
      */
@@ -292,8 +316,6 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     /**
      * Méthode permettant de vérifier que le dernier point placé permet une victoire horizontalement.
-     * @param x [Integer] Ligne sur laquelle la dernière forme a été placé.
-     * @param y [Integer] Colonne sur laquelle la dernière forme a été placée.
      * @param forme [Integer] Forme du joueur dernièrement placée.
      * @return [Boolean] Booléen indiquant si on est dans une configuration horizontale gagnante ou pas.
      */
@@ -309,8 +331,6 @@ public class Grille extends UnicastRemoteObject implements GrilleInterface{
 
     /**
      * Méthode permettant de vérifier que le dernier point placé permet une victoire en diagonale.
-     * @param x [Integer] Ligne sur laquelle la dernière forme a été placé.
-     * @param y [Integer] Colonne sur laquelle la dernière forme a été placée.
      * @param forme [Integer] Forme du joueur dernièrement placée.
      * @return [Boolean] Booléen indiquant si on est dans une configuration horizontale gagnante ou pas.
      */

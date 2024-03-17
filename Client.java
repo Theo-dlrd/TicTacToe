@@ -22,8 +22,19 @@ import java.awt.Container;
  * Classe implémentant les actions et affichages des clients sur la fenêtre.
  */
 public class Client {
+    /**
+     * Entier correspondant à la forme du joueur (1=croix, -1=rond).
+     */
     public int forme;
+
+    /**
+     * Entier correspondant à l'identifiant du joueur.
+     */
     public int id_joueur;
+
+    /**
+     * Matrice permettant de récupérer les modifications de la matrice.
+     */
     private int[][] ecouteGrille;
 
     /**
@@ -74,15 +85,15 @@ public class Client {
             }
 
             if(ip==null){
-                ri.sendStatus(this.id_joueur, GrilleInterface.Status.WAITING);
+                ri.setStatus(this.id_joueur, GrilleInterface.Status.WAITING);
             }
             else{
-                ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
+                ri.setStatus(this.id_joueur, GrilleInterface.Status.READY);
             }
 
             if(ri.getStatus(this.id_joueur)==GrilleInterface.Status.WAITING){
                 JOptionPane.showMessageDialog(frame, "Code partie : "+ this.getIPAdress()+"\nEn attente d'un autre joueur. Veuillez patienter...");
-                ri.sendStatus(this.id_joueur, GrilleInterface.Status.READY);
+                ri.setStatus(this.id_joueur, GrilleInterface.Status.READY);
             }
 
             //Vérifier que l'on a bien 2 joueurs
