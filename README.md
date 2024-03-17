@@ -34,7 +34,9 @@ Ce projet comporte les fonctionnalités suivantes :
 
 # Documentation
 
-Pour ce projet, aucune documentation n'est envisagée.
+La documentation pour c eprojet a été générée automatiquement avec Javadoc.
+
+Pour avoir un aperçu de méthodes, attribut ou même l'architecture du TP, lancez dans votre navigateur préféré le fichier ``ìndex.html```
 
 # Contribution
 
