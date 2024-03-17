@@ -36,7 +36,7 @@ Ce projet comporte les fonctionnalités suivantes :
 
 La documentation pour c eprojet a été générée automatiquement avec Javadoc.
 
-Pour avoir un aperçu de méthodes, attribut ou même l'architecture du TP, lancez dans votre navigateur préféré le fichier ``ìndex.html```
+Pour avoir un aperçu de méthodes, attribut ou même l'architecture du TP, lancez dans votre navigateur préféré le fichier ```index.html```
 
 # Contribution
 
