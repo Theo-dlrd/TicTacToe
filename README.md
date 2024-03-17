@@ -13,6 +13,7 @@ Le but de ce travail étant de laisser cours à l'imagination de l'étudiant con
 
 ## Installation
 
+0. Vérifier que Java JRE est téléchargé sur votre machine.
 1. Téléchargez l'archive du projet.
 2. Compiler le projet en utilisant la commande: ```javac *.java```
 
@@ -20,6 +21,7 @@ Le but de ce travail étant de laisser cours à l'imagination de l'étudiant con
 
 Très simple :
 Lancez les deux clients : ```java Client```.
+
 L'un lancera le serveur tandis que l'autre n'aura qu'à rejoindre la partie.
 Amusez-vous bien !
 
